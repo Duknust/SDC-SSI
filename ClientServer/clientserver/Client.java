@@ -13,7 +13,8 @@ import java.util.logging.Logger;
 public class Client {
     public static void main(String[] args) {
         try {
-            Socket socket = new Socket(args[1], Integer.parseInt(args[2]));
+            Socket socket = new Socket("localhost", 12345);
+            //Socket socket = new Socket(args[0], Integer.parseInt(args[1]));
             
             BufferedReader fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             BufferedWriter toServer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -23,13 +24,14 @@ public class Client {
             
             while(true){
                 String send = fromConsole.readLine();
-                toServer.write(send);
+                toServer.write(send+"\n");
                 toServer.flush();
+                System.out.println("--enviado--");
                 String recv = fromServer.readLine();
                 toConsole.write(recv);
                 toConsole.flush();
             }
-            
+        
         } catch (IOException ex){
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
