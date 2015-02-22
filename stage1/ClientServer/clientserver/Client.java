@@ -11,10 +11,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Client {
-    public static void main(String[] args) {
+    public static void main(int argc, String[] args) {
         try {
-            Socket socket = new Socket("localhost", 12345);
-            //Socket socket = new Socket(args[0], Integer.parseInt(args[1]));
+            //Socket socket = new Socket("localhost", 12345);
+            Socket socket = new Socket(args[0], Integer.parseInt(args[1]));
             
             BufferedReader fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             BufferedWriter toServer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));

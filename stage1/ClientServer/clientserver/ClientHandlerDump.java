@@ -12,7 +12,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,12 +20,11 @@ import java.util.logging.Logger;
  *
  * @author duarteduarte
  */
-public class ClientHandler implements Runnable{ 
+public class ClientHandlerDump implements Runnable{ 
     Socket socket = null;
     int numSerie = -1;
-    int lineNumber = 0;
 
-    public ClientHandler(Socket socket, int numSerie){
+    public ClientHandlerDump(Socket socket, int numSerie){
         this.socket = socket;
         this.numSerie = numSerie;
     }
@@ -39,7 +37,7 @@ public class ClientHandler implements Runnable{
         try {
             fromClient = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             toClient = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            File file = new File("file-"+this.numSerie+".txt");
+            File file = new File("dump.txt");
             
             if (!file.exists()) {
                 file.createNewFile();
@@ -51,19 +49,20 @@ public class ClientHandler implements Runnable{
                     closeConnection = true;
                     System.out.println("=["+numSerie+"]=");
                 } else {
-                    System.out.println(this.lineNumber+" "+line);
                     FileWriter fw = new FileWriter(file.getAbsoluteFile());
                     BufferedWriter bw = new BufferedWriter(fw);
-                    bw.write(this.lineNumber+" "+line);
+                    bw.write(this.numSerie+" "+line);
                     bw.flush();
-                    this.lineNumber++;
+                    this.numSerie++;
                 }
             }
         } catch (IOException ex) {
+            System.out.println("=["+numSerie+"]=");
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
-                fromClient.close();
+                if (fromClient!=null)
+                    fromClient.close();
             } catch (IOException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
