@@ -58,7 +58,7 @@ public class ClientHandlerDump implements Runnable{
 
             boolean needsIV = false;
 
-            if (prop.getProperty("needsIV").equals("true")){
+            if (prop.getProperty("needsIV").toLowerCase().equals("true")){
                 needsIV=true;
             }
 

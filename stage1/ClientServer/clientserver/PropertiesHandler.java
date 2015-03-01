@@ -5,6 +5,7 @@
  */
 package clientserver;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -20,19 +21,19 @@ public class PropertiesHandler {
     Properties prop = null;
     
     public PropertiesHandler(){
-        prop = new Properties();
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("config.properties");
-        if (inputStream!=null){
-            try {
+        try {
+            prop = new Properties();
+            InputStream inputStream = PropertiesHandler.class.getClassLoader().getResourceAsStream("config.properties");
+            if (inputStream!=null){
                 prop.load(inputStream);
-            } catch (IOException ex) {
-                Logger.getLogger(PropertiesHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
+        } catch (IOException ex) {
+            Logger.getLogger(PropertiesHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
     public Properties getProperties(){
-        return prop;
+        return this.prop;
     }
     
 }
