@@ -1,8 +1,7 @@
-//created by duknust
-//find in https://github.com/Duknust
 
 package clientserver;
 
+import com.sun.xml.internal.messaging.saaj.packaging.mime.internet.HeaderTokenizer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -61,28 +60,30 @@ public class Client {
             //BufferedReader fromConsole = new BufferedReader(new InputStreamReader(System.in));
             BufferedWriter toConsole = new BufferedWriter(new OutputStreamWriter(System.out));
             
-            toServer.write(chave);
+            toServer.write(chave+"\n");
             toServer.flush();
-            System.out.println("key sent");
+            System.out.println("[SYS-C] key sent");
             
             if(needsIV){
                 int test;
                 int i=0;
-                while((test=iv[i++])!=0) {
+                while(i<iv.length) {
+                    test=iv[i++];
                     toServer.write(test);
                     toServer.flush();
                 }   
-                System.out.println("--IV sent--");
+                System.out.println("[SYS-C] IV sent");
             }
             
-            while(true){
-                int test;
-                while((test=System.in.read())!=-1) {
-                    toServerC.write((byte)test);
-                    toServerC.flush();
-                }
-                System.out.println("--message sent--");
+            int test=0;
+            
+            while((test=System.in.read())!=10) { //10 means EOF
+                //System.out.println("C----"+test+"-----"); //debug of message 
+                toServerC.write((byte)test);
+                toServerC.flush(); 
             }
+            System.out.println("[SYS-C] message sent"); 
+            toServerC.close();
         
         } catch (IOException ex){
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
@@ -94,7 +95,7 @@ public class Client {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InvalidAlgorithmParameterException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        }   
+        }  
     }
 
 }

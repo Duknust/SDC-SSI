@@ -4,10 +4,14 @@
 
 ---
 
-**Stage1-1** Development Environment
+**Stage1-1** 
+    Development Environment
 
-**Stage1-2** File cypher using RC4
+**Stage1-2** 
+    File cypher using RC4
 
-**Stage1-3** RC4 implementation
+**Stage1-3** 
+    RC4 implementation
 
-**Stage2** Server-Client using cyphered streams
+**Stage2** 
+    Server-Client using cyphered streams

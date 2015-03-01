@@ -1,5 +1,3 @@
-//created by duknust
-//find in https://github.com/Duknust
 
 package clientserver;
 
@@ -38,6 +36,7 @@ public class ClientHandlerDump implements Runnable{
 
     @Override
     public void run() {
+        System.out.println("[SYS-S] new connection handler");
         BufferedReader fromClient = null;
         BufferedWriter toClient = null;
         
@@ -63,9 +62,10 @@ public class ClientHandlerDump implements Runnable{
             if (prop.getProperty("needsIV").toLowerCase().equals("true")){
                 needsIV=true;
             }
-
+            
             String chave = fromClient.readLine().trim();
-
+            System.out.println("[SYS-S] received key");
+            
             byte[] iv = new byte[1024];
 
             if(needsIV){
@@ -74,22 +74,12 @@ public class ClientHandlerDump implements Runnable{
                 while ((test=fromClient.read()) != 0) {
                     iv[i++]=(byte)test;
                 }
+                System.out.println("[SYS-S] received IV");
             }
-
+            
             int test;
             while(!closeConnection){
-                fromClientC = new CipherInputStream(socket.getInputStream(),Cipher.getInstance(ciph));
-                toClientC = new CipherOutputStream(socket.getOutputStream(),Cipher.getInstance(ciph));
-
-                byte[] message = new byte[1024];
-                int counter=0;
-                while ((test=fromClientC.read()) != -1) {
-                    message[counter++]=(byte)test;
-                }
-
-                String line = Arrays.toString(message);
-                System.out.println(line);
-
+                
                 SecretKeySpec skeySpec = new SecretKeySpec(chave.getBytes("UTF-8"),ciph);
                 Cipher cipher = Cipher.getInstance(ciph);
 
@@ -102,15 +92,41 @@ public class ClientHandlerDump implements Runnable{
                 else {
                     cipher.init(Cipher.DECRYPT_MODE, skeySpec);
                 }
+                
+                fromClientC = new CipherInputStream(socket.getInputStream(),cipher);
+                toClientC = new CipherOutputStream(socket.getOutputStream(),cipher);
+
+                byte[] tmp = new byte[1024];
+                int counter=0;
+                boolean stop = false;
+                while (counter<1024 && !stop) {
+                    test=fromClientC.read();
+                    if(test!=-1){
+                        System.out.println("---"+test+"---");
+                        tmp[counter++]=(byte)test;
+                    } else 
+                        stop=true;
+                }
+                fromClientC.close();
+                System.out.println("[SYS-S] received message");
+
+                byte[] message = new byte[counter];
+                for(int i=0; i<counter; i++)
+                    message[i]=tmp[i];
+                
+                //String line = Arrays.toString(message);
+                //System.out.println("S----"+line+"-----");
+
+                System.out.println("[SYS-S] clean message");
                 byte[] original = cipher.doFinal(message);
 
-                System.out.println(Arrays.toString(original));
+                System.out.println(new String(message, "UTF-8"));
 
                 FileWriter fw = new FileWriter(file.getAbsoluteFile());
                 BufferedWriter bw = new BufferedWriter(fw);
-                bw.write(this.numSerie+" "+line);
+                bw.write(this.numSerie+" "+new String(message, "UTF-8"));
                 bw.flush();
-                this.numSerie++;
+                closeConnection=true;
             }
         } catch (IOException ex) {
             Logger.getLogger(ClientHandlerDump.class.getName()).log(Level.SEVERE, null, ex);
