@@ -1,5 +1,5 @@
 
-package diffiehellman;
+
 
 import java.math.BigInteger;
 import java.security.AlgorithmParameterGenerator;
@@ -25,14 +25,14 @@ public class DiffieHellman {
         BigInteger bG = new BigInteger(g);
         
         try {
-            DHGenParameterSpec dhParams = new DHGenParameterSpec(bP.intValueExact(), bG.intValueExact());
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DH","BC");
+            //DHGenParameterSpec dhParams = new DHGenParameterSpec(bP.intValueExact(), bG.intValueExact());
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DH");
             
-            keyGen.initialize(dhParams, new SecureRandom());
+            keyGen.initialize(1024, new SecureRandom());
             
-            KeyAgreement aKeyAgree = KeyAgreement.getInstance("DH","BC");
+            KeyAgreement aKeyAgree = KeyAgreement.getInstance("DH");
             KeyPair aPair = keyGen.generateKeyPair();
-            KeyAgreement bKeyAgree = KeyAgreement.getInstance("DH","BC");
+            KeyAgreement bKeyAgree = KeyAgreement.getInstance("DH");
             KeyPair bPair = keyGen.generateKeyPair();
             
             aKeyAgree.init(aPair.getPrivate());
@@ -41,15 +41,11 @@ public class DiffieHellman {
             aKeyAgree.doPhase(bPair.getPublic(), true);
             bKeyAgree.doPhase(aPair.getPublic(), true);
             
-            MessageDigest hash = MessageDigest.getInstance("SHA1", "BC");
+            MessageDigest hash = MessageDigest.getInstance("SHA1");
             System.out.println(new String(hash.digest(aKeyAgree.generateSecret())));
             System.out.println(new String(hash.digest(bKeyAgree.generateSecret())));
             
         } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchProviderException ex) {
-            Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidAlgorithmParameterException ex) {
             Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InvalidKeyException ex) {
             Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
