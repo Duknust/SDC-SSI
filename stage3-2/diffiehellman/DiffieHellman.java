@@ -1,20 +1,27 @@
 package diffiehellman;
 
+import diffiehellman.exceptions.MessageNotAuthenticatedException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyAgreement;
+import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.DHParameterSpec;
 
 public class DiffieHellman {
 
@@ -27,29 +34,87 @@ public class DiffieHellman {
 
         KeyPair aPair = null;
         try {
-            //DHGenParameterSpec dhParams = new DHGenParameterSpec(bP.intValueExact(), bG.intValueExact());
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DH");
-
-            keyGen.initialize(1024, new SecureRandom());
+            DHParameterSpec dhps = new DHParameterSpec(bP, bG);
+            keyGen.initialize(dhps, new SecureRandom());
             aPair = keyGen.generateKeyPair();
 
-        } catch (NoSuchAlgorithmException ex) {
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException ex) {
             Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
         }
         return aPair;
+    }
+
+    public byte[] generateMAC(SecretKey key, byte[] message) {
+        byte[] messageWithMAC = null;
+        try {
+
+            Mac mac = Mac.getInstance("HmacSHA1");
+            mac.init(key);
+            byte[] macOfMessage = mac.doFinal(message);
+
+            //ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            //outputStream.write(message);
+            //outputStream.write(macOfMessage);
+            byte[] encryptedMessage = this.encryptMessage(key, message);
+
+            //messageWithMAC = outputStream.toByteArray();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            outputStream.write(encryptedMessage);
+            outputStream.write(macOfMessage);
+
+            messageWithMAC = outputStream.toByteArray();
+
+        } catch (NoSuchAlgorithmException | InvalidKeyException | IOException ex) {
+            Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return messageWithMAC;
+    }
+
+    public byte[] decodeMac(SecretKey key, byte[] message) throws MessageNotAuthenticatedException {
+        byte[] decryptedMessage = null;
+        try {
+            //ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            //outputStream.write(message);
+            //outputStream.write(macOfMessage);
+            //messageWithMAC = outputStream.toByteArray();
+            byte[] cleanMessage = new byte[message.length - 20];
+            System.arraycopy(message, 0, cleanMessage, 0, message.length - 20);
+
+            byte[] recvMac = new byte[20];
+            System.arraycopy(message, message.length - 20, recvMac, 0, 20);
+            System.out.println(message.length);
+            System.out.println(cleanMessage.length);
+            System.out.println(recvMac.length);
+
+            decryptedMessage = this.decypherMessage(key, cleanMessage);
+
+            Mac mac = Mac.getInstance("HmacSHA1");
+            mac.init(key);
+            byte[] calculatedMac = mac.doFinal(decryptedMessage);
+
+            boolean res = Arrays.equals(recvMac, calculatedMac);
+            if (res == false) {
+                throw new MessageNotAuthenticatedException("Wrong mac");
+            }
+        } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
+            Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return decryptedMessage;
     }
 
     public SecretKey getSessionKey(Key myPrivate, Key otherPublic) {
 
         SecretKey secretKey = null;
         try {
-            KeyAgreement aKeyAgree = null;
+            KeyAgreement aKeyAgree;
             aKeyAgree = KeyAgreement.getInstance("DH");
             aKeyAgree.init(myPrivate);
             aKeyAgree.doPhase(otherPublic, true);
             secretKey = aKeyAgree.generateSecret("AES");
 
-            //secretKey = new SecretKeySpec(secretKeyBytes, "DH");
         } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
             Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -72,7 +137,6 @@ public class DiffieHellman {
     public byte[] encryptMessage(SecretKey key, byte[] message) {
         byte[] cyphered = null;
         try {
-
             Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.ENCRYPT_MODE, key);
             cyphered = cipher.doFinal(message);

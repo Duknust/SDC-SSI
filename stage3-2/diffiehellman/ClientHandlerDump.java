@@ -1,5 +1,6 @@
 package diffiehellman;
 
+import diffiehellman.exceptions.MessageNotAuthenticatedException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -63,9 +64,11 @@ public class ClientHandlerDump implements Runnable {
 
             while (!closeConnection) {
 
-                String rcv = fromClient.readLine();
-
-                byte[] clientMessageBytes = dh.decypherMessage(sessionKey, Base64.getDecoder().decode(rcv));
+                String b64 = fromClient.readLine();
+                byte[] rcv = Base64.getDecoder().decode(b64);
+                System.out.println(new String(rcv));
+                byte[] clientMessageBytes = dh.decodeMac(sessionKey, rcv);
+//decypherMessage(sessionKey, Base64.getDecoder().decode(rcv));
                 System.out.println("[SYS] Received message");
                 FileWriter fw = new FileWriter(file.getAbsoluteFile());
                 BufferedWriter bw = new BufferedWriter(fw);
@@ -76,7 +79,7 @@ public class ClientHandlerDump implements Runnable {
         } catch (IOException ex) {
             Logger.getLogger(ClientHandlerDump.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("=[" + numSerie + "]=");
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | MessageNotAuthenticatedException ex) {
             Logger.getLogger(ClientHandlerDump.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

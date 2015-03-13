@@ -50,21 +50,20 @@ public class Client {
                 if (rcv.equals("stop")) {
                     stop = true;
                 } else {
-                    byte[] clientMessageBytes = dh.encryptMessage(sessionKey, rcv.getBytes("UTF-8"));
+                    byte[] clientMessageBytes = dh.generateMAC(sessionKey, rcv.getBytes());
+                    //dh.encryptMessage(sessionKey, rcv.getBytes("UTF-8"));
                     toServer.write(Base64.getEncoder().encodeToString(clientMessageBytes) + "\n");
+                    //System.out.println(new String(clientMessageBytes, "UTF-8"));
                     toServer.flush();
                     System.out.println("[SYS-C] message sent");
+                    System.out.println(new String(clientMessageBytes) + "\n");
+
                 }
             }
             toServer.close();
 
-        } catch (IOException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidKeySpecException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchAlgorithmException ex) {
+        } catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }
