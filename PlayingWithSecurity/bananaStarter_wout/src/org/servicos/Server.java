@@ -1,30 +1,32 @@
 package org.servicos;
 
-import java.io.EOFException;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.io.StreamCorruptedException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.classes.OOSUSER;
 import org.classes.Projecto;
 import org.classes.Utilizador;
-import org.tipos.Pacote;
+import org.tipos.Mensagem;
+import com.mongodb.*;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.concurrent.ArrayBlockingQueue;
+import org.bson.Document;
+import static org.servicos.Server.mp;
 
 public class Server {
 
-    public static HashMap<String, Projecto> mp;
-    public static HashMap<String, Utilizador> uz;
+    public static ArrayBlockingQueue<Projecto> mpQueue = new ArrayBlockingQueue<>(20, true);
+
+    public static MongoCollection uz;
+    public static MongoCollection mp;
     public static ArrayList<OOSUSER> listaoosuser;
 
     public static void pr(String s) {
@@ -37,7 +39,7 @@ public class Server {
         listaoosuser.remove(u);
     }
 
-    public static void enviaparatodos(Pacote p) {
+    public static void enviaparatodos(Mensagem p) {
 
         for (OOSUSER s : listaoosuser) {
             try {
@@ -50,7 +52,7 @@ public class Server {
 
     }
 
-    public static void enviaparauser(Pacote p, String user) {
+    public static void enviaparauser(Mensagem p, String user) {
 
         for (OOSUSER s : listaoosuser) {
 
@@ -92,9 +94,18 @@ public class Server {
 
     public static synchronized boolean addUtilizador(Utilizador u) {
         boolean res = false;
-        if (!Server.uz.containsKey(u.getNome())) {
-            Server.uz.put(u.getNome(), u);
-            res = true;
+
+        if (uz.find(new BasicDBObject("username", u.getNome())).limit(1) != null) {
+            Map<String, Object> userInMap = new HashMap<>();
+            userInMap.put("username", u.getNome());
+            userInMap.put("password", u.getPass());
+            Document doc = new Document(userInMap);
+            try {
+                uz.insertOne(doc);
+                res = true;
+            } catch (MongoWriteException e) {
+                res = false;
+            }
         }
 
         return res;
@@ -102,19 +113,42 @@ public class Server {
 
     public static synchronized boolean addProjecto(Projecto p) {
         boolean res = false;
-        if (!Server.mp.containsKey(p.getNome())) {
-            Server.mp.put(p.getNome(), p);
-            res = true;
+
+        if (mp.find(new BasicDBObject("_id", p.getNome())).limit(1) != null) {
+
+            try {
+                uz.insertOne(p.toDocument());
+                res = true;
+            } catch (MongoWriteException e) {
+                res = false;
+            }
         }
+
         return res;
     }
 
-    public static HashMap<String, Projecto> getMapProjectos() {
-        return Server.mp;
+    public static HashMap<String, Projecto> getMapProjectos(int skip) {
+        HashMap<String, Projecto> res = new HashMap<>();
+        MongoCursor<Document> cursor = mp.find().skip(skip).limit(10).iterator();
+        while (cursor.hasNext()) {
+            Document doc = cursor.next();
+            Projecto proj = Projecto.fromDocument(doc);
+            res.put(proj.getNome(), proj);
+            mpQueue.add(proj);
+        }
+
+        return res;
     }
 
     public static Utilizador getUtilizador(String nome) {
-        return uz.get(nome);
+        Utilizador res = null;
+        MongoCursor<Document> cursor = uz.find(new BasicDBObject("_id", nome)).limit(1).iterator();
+        while (cursor.hasNext()) {
+            Document doc = cursor.next();
+            Utilizador user = new Utilizador((String) doc.get("_id"), (String) doc.get("password"));
+            res = user;
+        }
+        return res;
     }
 
     /**
@@ -125,9 +159,14 @@ public class Server {
      * @param euros
      * @return -1 próprio projecto, 0 projecto nao existe, 1 sucesso
      */
-    public static int addEurosProj(String nomeProj, String nomeUserDoador, int euros) {
+    public static int addEurosProj(String nomeProj, String nomeUserDoador, double euros) {
         int res = 0;
-        Projecto p = Server.mp.get(nomeProj);
+        Projecto p = null;
+        Map<String, Object> projInMap = new HashMap<>();
+        projInMap.put("_id", nomeProj);
+        Document doc = new Document(projInMap);
+        MongoCursor<Document> cursor = mp.find(doc).iterator();
+
         synchronized (p) {
             if (p != null) {
                 if (p.getUtilizador().compareTo(nomeUserDoador) == 0) //user=dono
@@ -145,29 +184,43 @@ public class Server {
 
     public static Projecto getProjecto(String nomeProj) {
         Projecto res = null;
-        synchronized (Server.mp) {
-            res = Server.mp.get(nomeProj);
+        synchronized (mp) {
+            for (Projecto p : mpQueue) {
+                if (p.getNome().equals(nomeProj)) {
+                    res = p;
+                }
+            }
+            if (res == null) {
+                MongoCursor<Document> cursor = mp.find(new Document("_id", nomeProj)).limit(1).iterator();
+                while (cursor.hasNext()) {
+                    Document doc = cursor.next();
+                    Projecto proj = Projecto.fromDocument(doc);
+                    res = proj;
+                    mpQueue.add(res);
+                }
+            }
         }
-
         return res;
     }
 
     public static void main(String[] args) throws Exception {
 
-        mp = new HashMap<>();
-        uz = new HashMap<>();
+        //mp = new HashMap<>();
+        //uz = new HashMap<>();
+        MongoClient mongoClient = null;
 
-        abrir();
+        mongoClient = new MongoClient();
+        MongoDatabase db = mongoClient.getDatabase("projectWithSecurity");
+        uz = db.getCollection("users");
+        mp = db.getCollection("projects");
 
-        Utilizador u = new Utilizador("user", "pass");
-        uz.put(u.getNome(), u);
-
-        Utilizador u2 = new Utilizador("user2", "pass");
-        uz.put(u2.getNome(), u2);
-
-        Projecto p = new Projecto("CANETA", 100, 0, "user", "AAAAAAAA");
-        mp.put(p.getNome(), p);
-
+        //abrir();
+        //Utilizador u = new Utilizador("user", "pass");
+        //uz.put(u.getNome(), u);
+        //Utilizador u2 = new Utilizador("user2", "pass");
+        //uz.put(u2.getNome(), u2);
+        //Projecto p = new Projecto("CANETA", 100, 0, "user", "AAAAAAAA");
+        //mp.put(p.getNome(), p);
         listaoosuser = new ArrayList<>();
 
         //int port = Integer.parseInt(args[0]);
@@ -190,11 +243,11 @@ public class Server {
                     str = s.nextLine();
                     if (str.equals("sair")) {
                         sair = true;
-                        Server.sair();
+                        //Server.sair();
                     }
                     if (str.equals("quit")) {
                         sair = true;
-                        Server.sair();
+                        //Server.sair();
                         System.exit(0);
                     }
                 }
@@ -212,51 +265,57 @@ public class Server {
         }
 
     }
+    /*
+     public synchronized static void sair() {
+     ObjectOutputStream oos = null;
+     pr("vou gravar");
+     try {
+     //ToDo: limpar cache e matar thread
+     String fich = "ServerDados.sd";
+     oos = new ObjectOutputStream(
+     new FileOutputStream(fich));
+     savefile s = new savefile(mp, uz);
+     oos.writeObject(s);
+     oos.flush();
+     oos.close();
 
-    public synchronized static void sair() {
-        ObjectOutputStream oos = null;
-        pr("vou gravar");
-        try {
-            String fich = "ServerDados.sd";
-            oos = new ObjectOutputStream(
-                    new FileOutputStream(fich));
-            savefile s = new savefile(mp, uz);
-            oos.writeObject(s);
-            oos.flush();
-            oos.close();
-        } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                oos.close();
-            } catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.INFO, null, ex);
-            }
-        }
+     } catch (IOException ex) {
+     Logger.getLogger(Server.class
+     .getName()).log(Level.SEVERE, null, ex);
+     } finally {
+     try {
+     oos.close();
 
-    }
+     } catch (IOException ex) {
+     Logger.getLogger(Server.class
+     .getName()).log(Level.INFO, null, ex);
+     }
+     }
 
-    private static void abrir() throws IOException {
+     }
 
-        pr("vou abrir");
-        String fich = "ServerDados.sd";
-        savefile s = null;
-        ObjectInputStream oos = null;
-        try {
-            oos = new ObjectInputStream(new FileInputStream(fich));
+     private static void abrir() throws IOException {
 
-            s = (savefile) oos.readObject();
-        } catch (StreamCorruptedException | EOFException | ClassNotFoundException | FileNotFoundException c) {
-            pr(c.toString());
-        }
+     pr("vou abrir");
+     String fich = "ServerDados.sd";
+     savefile s = null;
+     ObjectInputStream oos = null;
+     try {
+     oos = new ObjectInputStream(new FileInputStream(fich));
 
-        if (s != null) {
-            Server.mp = new HashMap<>(s.getMp());
-            Server.uz = new HashMap<>(s.getUz());
-            oos.close();
-        }
+     s = (savefile) oos.readObject();
+     } catch (StreamCorruptedException | EOFException | ClassNotFoundException | FileNotFoundException c) {
+     pr(c.toString());
+     }
 
-    }
+     if (s != null) {
+     Server.mp = new HashMap<>(s.getMp());
+     Server.uz = new HashMap<>(s.getUz());
+     oos.close();
+
+     }
+
+     }*/
 
     static class savefile implements Serializable {
 

@@ -10,11 +10,7 @@ import java.util.HashMap;
 import org.classes.Projecto;
 import org.classes.Utilizador;
 
-/**
- *
- * @author MrFabio
- */
-public class Pacote implements Serializable {
+public abstract class Mensagem implements Serializable {
 
     private TipoOP tipo;
     private Projecto proj;
@@ -22,32 +18,32 @@ public class Pacote implements Serializable {
     private HashMap<String, Projecto> mp;
     private String string1;
     private String string2;
-    private int inteiro1;
-    private int inteiro2;
+    private double valor1;
+    private double valor2;
 
-    public Pacote() {
+    public Mensagem() {
         this.tipo = TipoOP.NULL;
         this.proj = null;
         this.user = null;
         this.mp = new HashMap<>();
         this.string1 = "";
         this.string2 = "";
-        this.inteiro1 = -1;
-        this.inteiro2 = -1;
+        this.valor1 = -1;
+        this.valor2 = -1;
     }
 
-    public Pacote(Pacote p) {
+    public Mensagem(Mensagem p) {
         this.tipo = p.getTipo();
         this.proj = p.getProj();
         this.user = p.getUser();
         this.mp = p.getMp();
         this.string1 = p.getString1();
         this.string2 = p.getString2();
-        this.inteiro1 = p.getInteiro1();
-        this.inteiro2 = p.getInteiro2();
+        this.valor1 = p.getValor1();
+        this.valor2 = p.getValor2();
     }
 
-    public Pacote(TipoOP tipo, Projecto proj, Utilizador user, HashMap<String, Projecto> mp, int inteiro1, int inteiro2, String str, String str2) {
+    public Mensagem(TipoOP tipo, Projecto proj, Utilizador user, HashMap<String, Projecto> mp, int inteiro1, int inteiro2, String str, String str2) {
         this.tipo = tipo;
         this.proj = proj;
         this.user = user;
@@ -55,8 +51,8 @@ public class Pacote implements Serializable {
 
         this.string1 = str;
         this.string2 = str2;
-        this.inteiro1 = inteiro1;
-        this.inteiro2 = inteiro2;
+        this.valor1 = inteiro1;
+        this.valor2 = inteiro2;
     }
 
     public String getString1() {
@@ -100,20 +96,20 @@ public class Pacote implements Serializable {
         this.tipo = tipo;
     }
 
-    public int getInteiro1() {
-        return inteiro1;
+    public double getValor1() {
+        return valor1;
     }
 
-    public void setInteiro1(int inteiro1) {
-        this.inteiro1 = inteiro1;
+    public void setValor1(double valor1) {
+        this.valor1 = valor1;
     }
 
-    public int getInteiro2() {
-        return inteiro2;
+    public double getValor2() {
+        return valor2;
     }
 
-    public void setInteiro2(int inteiro2) {
-        this.inteiro2 = inteiro2;
+    public void setValor2(double valor2) {
+        this.valor2 = valor2;
     }
 
     public String getString2() {
@@ -135,9 +131,9 @@ public class Pacote implements Serializable {
         this.user = login;
     }
 
-    public void criaREPLOGIN(int log) {
+    public void criaREPLOGIN(double log) {
         this.setTipo(TipoOP.REPLOGIN);
-        this.setInteiro1(log);
+        this.setValor1(log);
     }
 
     public void criaREQMAPPROJ() {
@@ -154,22 +150,22 @@ public class Pacote implements Serializable {
         this.setProj(p);
     }
 
-    public void criaREPPROJ(int i) {
+    public void criaREPPROJ(double i) {
         this.setTipo(TipoOP.REPPROJ);
-        this.setInteiro1(i);
+        this.setValor1(i);
     }
 
-    public void criaREQADDEUROS(int i, String nome, String user) {
+    public void criaREQADDEUROS(double i, String nome, String user) {
         this.setTipo(TipoOP.REQADDEUROS);
-        this.setInteiro1(i);
+        this.setValor1(i);
         this.setString1(nome);
         this.setString2(user);
     }
 
-    public void criaREPADDEUROS(int i, int euros, String nome) {
+    public void criaREPADDEUROS(double i, double euros, String nome) {
         this.setTipo(TipoOP.REPADDEUROS);
-        this.setInteiro1(i);//1 OK _ 0 FALHOU
-        this.setInteiro2(euros);
+        this.setValor1(i);//1 OK _ 0 FALHOU
+        this.setValor2(euros);
         this.setString1(nome);
     }
 
@@ -178,23 +174,11 @@ public class Pacote implements Serializable {
         this.setProj(p);
     }
 
-    public void criaNOTIFEUROS(String nome, String proj, int euros) {
+    public void criaNOTIFEUROS(String nome, String proj, double euros) {
         this.setTipo(TipoOP.NOTIFEUROS);
         this.setString1(nome);
         this.setString2(proj);
-        this.setInteiro1(euros);
-    }
-
-    public void criaREQREGISTO(String nome, String pass) {
-        this.setTipo(TipoOP.REQREGISTO);
-        this.setString1(nome);
-        this.setString2(pass);
-    }
-
-    public void criaREPREGISTO(String nome, int n) {
-        this.setTipo(TipoOP.REPREGISTO);
-        this.setString1(nome);
-        this.setInteiro1(n);
+        this.setValor1(euros);
     }
 
     public void criaREQRETRY(String nome) {
@@ -204,13 +188,7 @@ public class Pacote implements Serializable {
 
     @Override
     public String toString() {
-        return "Pacote{" + "tipo=" + tipo + ", proj=" + proj + ", user=" + user + ", mp=" + mp + ", inteiro1=" + inteiro1 + ", inteiro2=" + inteiro2 + ", string=" + '}';
-    }
-
-    @Override
-    public Pacote clone() {
-
-        return new Pacote(this);
+        return "Pacote{" + "tipo=" + tipo + ", proj=" + proj + ", user=" + user + ", mp=" + mp + ", inteiro1=" + valor1 + ", inteiro2=" + valor2 + ", string=" + '}';
     }
 
 }

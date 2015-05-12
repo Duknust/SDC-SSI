@@ -5,16 +5,11 @@
  */
 package org.view;
 
-import java.util.HashMap;
 import javax.swing.table.DefaultTableModel;
 import org.Main;
 import org.classes.Projecto;
 import org.classes.UserEuros;
 
-/**
- *
- * @author MrFabio
- */
 public class MaisContrib extends javax.swing.JFrame {
 
     /**

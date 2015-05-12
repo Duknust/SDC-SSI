@@ -9,13 +9,9 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 import javax.swing.JOptionPane;
 import org.Main;
-import org.tipos.Pacote;
+import org.tipos.Mensagem;
 import org.tipos.TipoOP;
 
-/**
- *
- * @author MrFabio
- */
 public class ThreadClienteListener extends Thread {
 
     private Socket cli;
@@ -43,14 +39,14 @@ public class ThreadClienteListener extends Thread {
         } catch (IOException ex) {
             System.out.println(ex.toString());
         }
-        Pacote p;
+        Mensagem p;
         TipoOP tp;
         while (true) {
             p = null;
             tp = TipoOP.NULL;
             try {
                 System.out.println("ESTOU ESPERANDO CENAS");
-                p = (Pacote) ois.readObject();
+                p = (Mensagem) ois.readObject();
                 System.out.println("RECEBI CENAS");
                 if (p != null) {
                     System.out.println("TO" + p.toString());
@@ -61,8 +57,8 @@ public class ThreadClienteListener extends Thread {
                             Main.mapProjectos.vals.put(p.getProj().getNome(), p.getProj());
                             break;
                         case REPNOMEPROJ:
-                            System.out.println("RECEBI " + tp + " " + p.getInteiro1());
-                            Main.ReqProjectoInt = p.getInteiro1();
+                            System.out.println("RECEBI " + tp + " " + p.getValor1());
+                            Main.ReqProjectoInt = p.getValor1();
                             Main.mapProjectos.setListaProjectos(p.getMp());
                             synchronized (Main.inter) {
                                 Main.inter.notifyAll();
@@ -77,7 +73,7 @@ public class ThreadClienteListener extends Thread {
                         case REPLOGIN:
                             System.out.println("RECEBI " + tp);
                             synchronized (Main.inicio) {
-                                Main.ReqLoginInt = p.getInteiro1();
+                                Main.ReqLoginInt = p.getValor1();
                                 //Main.notifica_interface();
                                 Main.inicio.notifyAll();
                             }
@@ -85,7 +81,7 @@ public class ThreadClienteListener extends Thread {
 
                         case REPPROJ:
                             System.out.println("RECEBI " + tp);
-                            Main.ReqProjectoInt = p.getInteiro1();
+                            Main.ReqProjectoInt = p.getValor1();
                             synchronized (Main.inter) {
                                 Main.inter.notifyAll();
                             }
@@ -100,9 +96,9 @@ public class ThreadClienteListener extends Thread {
 
                         case REPADDEUROS:
                             System.out.println("RECEBI " + tp);
-                            if (p.getInteiro1() == 1) {
-                                JOptionPane.showMessageDialog(null, "Ofereceu com sucesso " + p.getInteiro2() + "€ ao Projecto " + p.getString1());
-                            } else if (p.getInteiro1() == -1) {
+                            if (p.getValor1() == 1) {
+                                JOptionPane.showMessageDialog(null, "Ofereceu com sucesso " + p.getValor2() + "€ ao Projecto " + p.getString1());
+                            } else if (p.getValor1() == -1) {
                                 JOptionPane.showMessageDialog(null, "Não pode ofercer dinheiro a projectos seus");
                             } else {
                                 JOptionPane.showMessageDialog(null, "Houve um erro com a oferta ao Projecto " + p.getString1());
@@ -118,7 +114,7 @@ public class ThreadClienteListener extends Thread {
                         case REPREGISTO:
                             System.out.println("RECEBI " + tp);
 
-                            Main.ReqRegisto = p.getInteiro1();
+                            Main.ReqRegisto = p.getValor1();
                             synchronized (Main.inicio) {
                                 Main.inicio.notifyAll();
                             }

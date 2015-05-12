@@ -1,6 +1,5 @@
 package org.tipos;
 
-//import dss_empregados.Empregado;
 import org.classes.Projecto;
 import java.util.*;
 import java.io.*;

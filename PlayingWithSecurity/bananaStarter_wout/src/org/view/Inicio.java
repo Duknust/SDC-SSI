@@ -13,12 +13,8 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.Main;
 import org.classes.Utilizador;
-import org.tipos.Pacote;
+import org.tipos.Mensagem;
 
-/**
- *
- * @author MrFabio
- */
 public class Inicio extends javax.swing.JFrame {
 
     /**
@@ -296,12 +292,12 @@ public class Inicio extends javax.swing.JFrame {
                 password.append(c);
             }
 
-            Pacote login = new Pacote();
+            Mensagem login = new Mensagem();
             Utilizador userpass = new Utilizador(user, password.toString());
             login.criaREQLOGIN(userpass);
             Main.enviaPacote(login);
             try {
-                while (Main.ReqLoginInt == -1) {
+                while (Main.ReqLoginInt == -1.0) {
                     synchronized (this) {
                         this.wait();
                     }
@@ -364,7 +360,7 @@ public class Inicio extends javax.swing.JFrame {
 
             if (nomer.length() > 0 && password.length() > 0) {
 
-                Pacote pa = new Pacote();
+                Mensagem pa = new Mensagem();
                 pa.criaREQREGISTO(nomer, password.toString());
 
                 Main.enviaPacote(pa);

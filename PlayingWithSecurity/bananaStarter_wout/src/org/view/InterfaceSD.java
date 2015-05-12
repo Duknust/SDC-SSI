@@ -14,7 +14,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import org.Main;
 import org.classes.Projecto;
-import org.tipos.Pacote;
+import org.tipos.Mensagem;
 
 public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runnable */ {
 
@@ -89,8 +89,8 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
 
     }
 
-    public void addNotif(Pacote p) {
-        listNotifsModel.addElement(p.getString2() + " _ " + p.getString1() + " -> " + p.getInteiro1() + " €");
+    public void addNotif(Mensagem p) {
+        listNotifsModel.addElement(p.getString2() + " _ " + p.getString1() + " -> " + p.getValor1() + " €");
     }
 
     public void addNotif(String p) {
@@ -293,7 +293,7 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
                 try {
                     String nomeP = jListMeusProjs.getSelectedValue().toString();
                     Projecto p = Main.mapProjectos.vals.get(nomeP);
-                    int actual = p.getActual(), necessario = p.getNecessario();
+                    double actual = p.getActual(), necessario = p.getNecessario();
 
                     if (actual >= necessario) {
                         jTextFieldMPEstado.setText("FINANCIDADO");
@@ -811,7 +811,7 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
             String nome = jTextFieldProjNome.getText();
 
             if (nome.compareTo("") != 0) {
-                Pacote p = new Pacote();
+                Mensagem p = new Mensagem();
                 p.criaREQADDEUROS(valor, jTextFieldProjNome.getText(), Main.userlogado/*jTableListaProjectos.getValueAt(jTableListaProjectos.getSelectedRow(), 0).toString()*/);
                 Main.enviaPacote(p);
             } else {

@@ -7,10 +7,6 @@ package org.classes;
 
 import java.io.ObjectOutputStream;
 
-/**
- *
- * @author MrFabio
- */
 public class OOSUSER {
 
     String User;

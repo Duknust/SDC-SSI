@@ -11,7 +11,7 @@ import javax.swing.JOptionPane;
 import org.classes.Projecto;
 import org.servicos.ThreadClienteListener;
 import org.tipos.HashMapObs;
-import org.tipos.Pacote;
+import org.tipos.Mensagem;
 import org.view.Inicio;
 import org.view.InterfaceSD;
 
@@ -19,10 +19,6 @@ import org.view.InterfaceSD;
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
- */
-/**
- *
- * @author MrFabio
  */
 public class Main {
 
@@ -34,11 +30,11 @@ public class Main {
     public static String userlogado = "";
     public static Thread ReqProjThread;
     public static Thread iniciaDadosThread;
-    public static int ReqProjectoInt;
-    public static int ReqLoginInt;//0 Pass errada - 1 OK - 2 Não existe esse user
+    public static double ReqProjectoInt;
+    public static double ReqLoginInt;//0 Pass errada - 1 OK - 2 Não existe esse user
     public static int ReqProjectoNomeInt;
     public static int ACTMAPInt;
-    public static int ReqRegisto;
+    public static double ReqRegisto;
     public static int activa;
     public static ThreadClienteListener tcl;
     public static InterfaceSD inter;
@@ -53,7 +49,7 @@ public class Main {
 
         Projecto p = new Projecto(Nome, Necessario, userlogado, Descricao);
 
-        Pacote pa = new Pacote();
+        Mensagem pa = new Mensagem();
         pa.criaREQPROJ(p.clone());
         enviaPacote(pa);
 
@@ -85,7 +81,7 @@ public class Main {
 
         //synchronized (iniciaDadosThread) {
         //Pedir os maps
-        Pacote p = new Pacote();
+        Mensagem p = new Mensagem();
         p.criaREQMAPPROJ();
         enviaPacote(p);
 //        iniciaDadosThread = new Thread();
@@ -179,7 +175,7 @@ public class Main {
         if (Main.activa == 1)//esta ligado
         {
             Main.iniciathreadcliente();
-            Pacote p = new Pacote();
+            Mensagem p = new Mensagem();
             p.criaREQRETRY(Main.userlogado);
             Main.enviaPacote(p);
 
@@ -219,7 +215,7 @@ public class Main {
         inicio.setVisible(true);
     }
 
-    public static void enviaPacote(Pacote p) {//So envia pedidos sem dados
+    public static void enviaPacote(Mensagem p) {//So envia pedidos sem dados
 
         if (p != null) {
 

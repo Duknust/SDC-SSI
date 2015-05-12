@@ -15,13 +15,9 @@ import java.util.HashMap;
 import org.classes.OOSUSER;
 import org.classes.Projecto;
 import org.classes.Utilizador;
-import org.tipos.Pacote;
+import org.tipos.Mensagem;
 import org.tipos.TipoOP;
 
-/**
- *
- * @author MrFabio
- */
 public class ServeCliente extends Thread {
 
     private Socket cli;
@@ -39,8 +35,8 @@ public class ServeCliente extends Thread {
 
         InputStream ins = null;
         OutputStream outs = null;
-        Pacote recebido = null;
-        Pacote resposta = null;
+        Mensagem recebido = null;
+        Mensagem resposta = null;
         TipoOP tipo;
         lido = false;
         String meunome = "";
@@ -71,13 +67,13 @@ public class ServeCliente extends Thread {
             tipo = TipoOP.NULL;
             try {
                 System.out.println("/ESPERANDO PACOTES NO SERVER");
-                recebido = (Pacote) ois.readObject();
+                recebido = (Mensagem) ois.readObject();
                 System.out.println("|RECEBI PACOTES NO SERVER");
 
 //                System.out.println("2");
                 if (recebido != null) {
                     tipo = recebido.getTipo();
-                    resposta = new Pacote();
+                    resposta = new Mensagem();
                     System.out.println("\\SERVER_RECEBI " + tipo + "\n");
                     switch (tipo) {
 
@@ -91,8 +87,8 @@ public class ServeCliente extends Thread {
                             if (contem != null) {//existe
                                 if (contem.equals(recebido.getUser()) == true) {//checka user e pass
                                     resposta.criaREPLOGIN(1);
-                                    Pacote act = new Pacote();//Envia o map de projectos para encher o map do cliente
-                                    HashMap<String, Projecto> map = new HashMap<>(Server.getMapProjectos());
+                                    Mensagem act = new Mensagem();//Envia o map de projectos para encher o map do cliente
+                                    HashMap<String, Projecto> map = new HashMap<>(Server.getMapProjectos(0));
                                     act.criaREPMAPPROJ(map);
                                     ous.writeObject(act);
                                     //Associa o OOS ao user
@@ -106,7 +102,7 @@ public class ServeCliente extends Thread {
                                 resposta.criaREPLOGIN(2);
                             }
 
-                            System.out.println("SERVER VAI ENVIAR  " + resposta.getTipo() + resposta.getInteiro1());
+                            System.out.println("SERVER VAI ENVIAR  " + resposta.getTipo() + resposta.getValor1());
                             try {
                                 ous.writeObject(resposta);
                             } catch (IOException i) {
@@ -116,7 +112,7 @@ public class ServeCliente extends Thread {
 
                         case REQMAPPROJ:
 
-                            HashMap<String, Projecto> map = new HashMap<>(Server.getMapProjectos());
+                            HashMap<String, Projecto> map = new HashMap<>(Server.getMapProjectos(0));
 
                             resposta.criaREPMAPPROJ(map);
 
@@ -133,7 +129,7 @@ public class ServeCliente extends Thread {
 
                                 resposta.criaREPPROJ(1);
 
-                                Pacote act = new Pacote();
+                                Mensagem act = new Mensagem();
                                 act.criaACTPROJ(Server.getProjecto(nome));
                                 Server.enviaparatodos(act);
                                 //ous.writeObject(act);
@@ -153,23 +149,23 @@ public class ServeCliente extends Thread {
                             if (projreqadde != null)//se existe no map
                             {
 
-                                int funca = Server.addEurosProj(nomeproj, recebido.getString2(), recebido.getInteiro1());//Adiciona euros e historico
+                                int funca = Server.addEurosProj(nomeproj, recebido.getString2(), recebido.getValor1());//Adiciona euros e historico
                                 if (funca > 0) {
-                                    resposta.criaREPADDEUROS(1, recebido.getInteiro1(), nomeproj);
-                                    Pacote p2 = new Pacote();
+                                    resposta.criaREPADDEUROS(1, recebido.getValor1(), nomeproj);
+                                    Mensagem p2 = new Mensagem();
                                     p2.criaACTPROJ(projreqadde.clone());
                                     Server.enviaparatodos(p2);
                                     ous.writeObject(resposta);
                                     //ous.writeObject(p2);
                                     //notificar o criador do projecto
 
-                                    Pacote p3 = new Pacote();
-                                    p3.criaNOTIFEUROS(meunome, nomeproj, recebido.getInteiro1());
+                                    Mensagem p3 = new Mensagem();
+                                    p3.criaNOTIFEUROS(meunome, nomeproj, recebido.getValor1());
                                     Server.enviaparauser(p3, projreqadde.getUtilizador());
                                 } else if (funca == 0) {// NÃO EXISTE
                                     resposta.criaREPADDEUROS(0, 0, nomeproj);
                                 } else {//-1 USER == DONO
-                                    resposta.criaREPADDEUROS(-1, recebido.getInteiro1(), nomeproj);
+                                    resposta.criaREPADDEUROS(-1, recebido.getValor1(), nomeproj);
                                     ous.writeObject(resposta);
                                 }
 
@@ -200,7 +196,7 @@ public class ServeCliente extends Thread {
 
                             String nomeretry = recebido.getString1();
                             Server.adduser(ous, nomeretry);
-                            HashMap<String, Projecto> mapretry = new HashMap<>(Server.getMapProjectos());
+                            HashMap<String, Projecto> mapretry = new HashMap<>(Server.getMapProjectos(0));
 
                             resposta.criaREPMAPPROJ(mapretry);
 
@@ -215,7 +211,7 @@ public class ServeCliente extends Thread {
             } catch (IOException | RuntimeException | ClassNotFoundException ex) {
                 System.out.println("IOC_" + ex.toString());
                 Server.remove(os);
-                Server.sair();
+                //Server.sair();
                 break;
                 /* if (ex.toString().compareTo("java.net.SocketException: socket closed") == 0) {
                  //Server.apagasocket(cli);
