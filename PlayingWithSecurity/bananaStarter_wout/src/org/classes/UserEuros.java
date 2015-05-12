@@ -11,9 +11,9 @@ import java.util.Objects;
 public class UserEuros implements Comparable<UserEuros>, Serializable {
 
     String nome;
-    double euros;
+    int euros;
 
-    public UserEuros(String name, double eur) {
+    public UserEuros(String name, int eur) {
         this.nome = name;
         this.euros = eur;
     }
@@ -36,11 +36,11 @@ public class UserEuros implements Comparable<UserEuros>, Serializable {
         this.nome = nome;
     }
 
-    public double getEuros() {
+    public int getEuros() {
         return euros;
     }
 
-    public void setEuros(double euros) {
+    public void setEuros(int euros) {
         this.euros = euros;
     }
 
@@ -55,7 +55,7 @@ public class UserEuros implements Comparable<UserEuros>, Serializable {
         }
     }
 
-    public synchronized void inceuros(double euros) {
+    public synchronized void inceuros(int euros) {
         this.euros += euros;
     }
 

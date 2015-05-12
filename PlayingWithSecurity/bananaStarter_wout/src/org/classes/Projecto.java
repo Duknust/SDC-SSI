@@ -5,13 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 import org.bson.Document;
-import org.servicos.Server;
 
 public class Projecto implements Serializable {
 
     private String Nome;//Nome
-    private double Necessario;//Quanto precisa
-    private double Actual;//Quanto tem ou com quanto ficou
+    private int Necessario;//Quanto precisa
+    private int Actual;//Quanto tem ou com quanto ficou
     private String Descricao;//Descricao do Projecto
     private String Utilizador;//ID do Utilizador que o criou
     private TreeSet<UserEuros> ListaBids;//ID do Utilizador que o criou
@@ -27,7 +26,7 @@ public class Projecto implements Serializable {
 
     }
 
-    public Projecto(String Nome, double Necessario, double Final, String Utilizador, /*boolean Finalizado,*/ String Descricao/*, Calendar Inicio, Calendar Fim*/) {
+    public Projecto(String Nome, int Necessario, int Final, String Utilizador, /*boolean Finalizado,*/ String Descricao/*, Calendar Inicio, Calendar Fim*/) {
         this.Nome = Nome;
         this.Necessario = Necessario;
         this.Actual = Final;
@@ -36,7 +35,7 @@ public class Projecto implements Serializable {
         this.ListaBids = new TreeSet<>();
     }
 
-    public Projecto(String Nome, double Necessario, String Utilizador, String Descricao/*, int fim*/) {
+    public Projecto(String Nome, int Necessario, String Utilizador, String Descricao/*, int fim*/) {
         this.Nome = Nome;
         this.Necessario = Necessario;
         this.Actual = 0;
@@ -63,19 +62,19 @@ public class Projecto implements Serializable {
         this.Nome = Nome;
     }
 
-    public double getNecessario() {
+    public int getNecessario() {
         return Necessario;
     }
 
-    public void setNecessario(double Necessario) {
+    public void setNecessario(int Necessario) {
         this.Necessario = Necessario;
     }
 
-    public double getActual() {
+    public int getActual() {
         return Actual;
     }
 
-    public void setActual(double Actual) {
+    public void setActual(int Actual) {
         this.Actual = Actual;
     }
 
@@ -107,10 +106,9 @@ public class Projecto implements Serializable {
         return "Estado Actual:\n" + this.getActual() + " € de " + this.getNecessario() + " €";
     }
 
-    public synchronized boolean addeuros(double euros) {//adiciona dinheiro se estiver NÃO-FINALIZADO _ LOCK
+    public synchronized boolean addeuros(int euros) {//adiciona dinheiro se estiver NÃO-FINALIZADO _ LOCK
         boolean ret;
         this.Actual += euros;
-        Server.mp.updateOne(new Document("name", this.getNome()), new Document("$inc", euros));
         ret = true;
         return ret;
 
@@ -135,7 +133,7 @@ public class Projecto implements Serializable {
         }
     }
 
-    public synchronized void addhistorico(String nome, double euros) {
+    public synchronized void addhistorico(String nome, int euros) {
         boolean userJaContribuiu = false;
         UserEuros u1 = null;
         for (UserEuros u : ListaBids) {
@@ -156,14 +154,14 @@ public class Projecto implements Serializable {
     }
 
     public static Projecto fromDocument(Document doc) {
-        return new Projecto((String) doc.get("_id"), (double) doc.get("goal"), (double) doc.get("pledged"), (String) doc.get("username"), (String) doc.get("description"));
+        return new Projecto((String) doc.get("_id"), Integer.parseInt((String) doc.get("goal")), Integer.parseInt((String) doc.get("pledged")), (String) doc.get("username"), (String) doc.get("description"));
     }
 
     public Document toDocument() {
         Map<String, Object> userInMap = new HashMap<>();
         userInMap.put("_id", this.Nome);
-        userInMap.put("goal", this.Necessario);
-        userInMap.put("pledged", this.Actual);
+        userInMap.put("goal", this.Necessario + "");
+        userInMap.put("pledged", this.Actual + "");
         userInMap.put("username", this.Utilizador);
         userInMap.put("bids", this.ListaBids.toArray());
         userInMap.put("description", this.Descricao);

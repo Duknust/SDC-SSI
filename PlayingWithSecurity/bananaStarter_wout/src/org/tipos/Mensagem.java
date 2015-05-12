@@ -12,14 +12,14 @@ import org.classes.Utilizador;
 
 public abstract class Mensagem implements Serializable {
 
-    private TipoOP tipo;
-    private Projecto proj;
-    private Utilizador user;
-    private HashMap<String, Projecto> mp;
-    private String string1;
-    private String string2;
-    private double valor1;
-    private double valor2;
+    protected TipoOP tipo;
+    protected Projecto proj;
+    protected Utilizador user;
+    protected HashMap<String, Projecto> mp;
+    protected String string1;
+    protected String string2;
+    protected int valor1;
+    protected int valor2;
 
     public Mensagem() {
         this.tipo = TipoOP.NULL;
@@ -96,19 +96,19 @@ public abstract class Mensagem implements Serializable {
         this.tipo = tipo;
     }
 
-    public double getValor1() {
+    public int getValor1() {
         return valor1;
     }
 
-    public void setValor1(double valor1) {
+    public void setValor1(int valor1) {
         this.valor1 = valor1;
     }
 
-    public double getValor2() {
+    public int getValor2() {
         return valor2;
     }
 
-    public void setValor2(double valor2) {
+    public void setValor2(int valor2) {
         this.valor2 = valor2;
     }
 
@@ -121,71 +121,6 @@ public abstract class Mensagem implements Serializable {
     }
 
     //----------------
-    public void criaADDPROJECTO(Projecto p) {
-        this.tipo = TipoOP.ADDPROJECTO;
-        this.proj = p.clone();
-    }
-
-    public void criaREQLOGIN(Utilizador login) {
-        this.tipo = TipoOP.REQLOGIN;
-        this.user = login;
-    }
-
-    public void criaREPLOGIN(double log) {
-        this.setTipo(TipoOP.REPLOGIN);
-        this.setValor1(log);
-    }
-
-    public void criaREQMAPPROJ() {
-        this.tipo = TipoOP.REQMAPPROJ;
-    }
-
-    public void criaREPMAPPROJ(HashMap<String, Projecto> map) {
-        this.setTipo(TipoOP.REPMAPPROJ);
-        this.setMp(map);
-    }
-
-    public void criaREQPROJ(Projecto p) {
-        this.setTipo(TipoOP.REQPROJ);
-        this.setProj(p);
-    }
-
-    public void criaREPPROJ(double i) {
-        this.setTipo(TipoOP.REPPROJ);
-        this.setValor1(i);
-    }
-
-    public void criaREQADDEUROS(double i, String nome, String user) {
-        this.setTipo(TipoOP.REQADDEUROS);
-        this.setValor1(i);
-        this.setString1(nome);
-        this.setString2(user);
-    }
-
-    public void criaREPADDEUROS(double i, double euros, String nome) {
-        this.setTipo(TipoOP.REPADDEUROS);
-        this.setValor1(i);//1 OK _ 0 FALHOU
-        this.setValor2(euros);
-        this.setString1(nome);
-    }
-
-    public void criaACTPROJ(Projecto p) {
-        this.setTipo(TipoOP.ACTPROJECTO);
-        this.setProj(p);
-    }
-
-    public void criaNOTIFEUROS(String nome, String proj, double euros) {
-        this.setTipo(TipoOP.NOTIFEUROS);
-        this.setString1(nome);
-        this.setString2(proj);
-        this.setValor1(euros);
-    }
-
-    public void criaREQRETRY(String nome) {
-        this.setTipo(TipoOP.REQRETRY);
-        this.setString1(nome);
-    }
-
     @Override
     public String toString() {
         return "Pacote{" + "tipo=" + tipo + ", proj=" + proj + ", user=" + user + ", mp=" + mp + ", inteiro1=" + valor1 + ", inteiro2=" + valor2 + ", string=" + '}';

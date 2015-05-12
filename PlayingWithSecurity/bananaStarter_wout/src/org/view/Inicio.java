@@ -13,7 +13,10 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.Main;
 import org.classes.Utilizador;
+import org.servicos.ServeCliente;
 import org.tipos.Mensagem;
+import org.tipos.requests.ReqLogin;
+import org.tipos.requests.ReqRegisto;
 
 public class Inicio extends javax.swing.JFrame {
 
@@ -292,9 +295,11 @@ public class Inicio extends javax.swing.JFrame {
                 password.append(c);
             }
 
-            Mensagem login = new Mensagem();
+            //Mensagem login = new Mensagem();
             Utilizador userpass = new Utilizador(user, password.toString());
-            login.criaREQLOGIN(userpass);
+
+            Mensagem login = new ReqLogin(userpass);
+            //login.criaREQLOGIN(userpass);
             Main.enviaPacote(login);
             try {
                 while (Main.ReqLoginInt == -1.0) {
@@ -303,6 +308,7 @@ public class Inicio extends javax.swing.JFrame {
                     }
                 }
             } catch (InterruptedException ex) {
+                Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("No wait do LOGIN " + ex.toString());
             }
             if (Main.ReqLoginInt == 1) {//Registou entao loga o man
@@ -360,9 +366,9 @@ public class Inicio extends javax.swing.JFrame {
 
             if (nomer.length() > 0 && password.length() > 0) {
 
-                Mensagem pa = new Mensagem();
-                pa.criaREQREGISTO(nomer, password.toString());
-
+                //Mensagem pa = new Mensagem();
+                //pa.criaREQREGISTO(nomer, password.toString());
+                Mensagem pa = new ReqRegisto(nomer, password.toString());
                 Main.enviaPacote(pa);
 
                 try {
@@ -372,6 +378,7 @@ public class Inicio extends javax.swing.JFrame {
                         }
                     }
                 } catch (InterruptedException ex) {
+                    Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, ex);
                     System.out.println("No wait do Registo " + ex.toString());
                 }
 
@@ -414,6 +421,7 @@ public class Inicio extends javax.swing.JFrame {
             Main.iniciasocket();
             Main.activa = 1;
         } catch (IOException ex) {
+            Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, ex);
             Main.activa = 0;
         }
 

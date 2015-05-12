@@ -18,8 +18,12 @@ import java.net.Socket;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.bson.Document;
 import static org.servicos.Server.mp;
+import org.tipos.requests.ReqActProj;
+import org.tipos.requests.ReqNotifEuros;
 
 public class Server {
 
@@ -43,8 +47,9 @@ public class Server {
 
         for (OOSUSER s : listaoosuser) {
             try {
-                s.getOos().writeObject(p.clone());
+                s.getOos().writeObject(((ReqActProj) p).clone());
             } catch (IOException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                 pr("para todos_" + ex.toString());
             }
 
@@ -58,8 +63,9 @@ public class Server {
 
             if (s.getUser().compareTo(user) == 0) {
                 try {
-                    s.getOos().writeObject(p.clone());
+                    s.getOos().writeObject(((ReqNotifEuros) p).clone());
                 } catch (IOException ex) {
+                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                     pr("para user " + user + " _ " + ex.toString());
                 }
             }
@@ -159,16 +165,20 @@ public class Server {
      * @param euros
      * @return -1 próprio projecto, 0 projecto nao existe, 1 sucesso
      */
-    public static int addEurosProj(String nomeProj, String nomeUserDoador, double euros) {
+    public static int addEurosProj(String nomeProj, String nomeUserDoador, int euros) {
         int res = 0;
         Projecto p = null;
         Map<String, Object> projInMap = new HashMap<>();
         projInMap.put("_id", nomeProj);
         Document doc = new Document(projInMap);
         MongoCursor<Document> cursor = mp.find(doc).iterator();
+        while (cursor.hasNext()) {
+            Document proj = cursor.next();
+            p = Projecto.fromDocument(proj);
+        }
 
-        synchronized (p) {
-            if (p != null) {
+        if (p != null) {
+            synchronized (p) {
                 if (p.getUtilizador().compareTo(nomeUserDoador) == 0) //user=dono
                 {
                     res = -1;
@@ -178,7 +188,10 @@ public class Server {
                     res = 1;
                 }
             }
+            doc = p.toDocument();
+            mp.updateOne(new Document("_id", nomeProj), doc);
         }
+
         return res;
     }
 
@@ -203,7 +216,7 @@ public class Server {
         return res;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         //mp = new HashMap<>();
         //uz = new HashMap<>();
@@ -226,9 +239,13 @@ public class Server {
         //int port = Integer.parseInt(args[0]);
         int port = 1337;
         System.out.println("A ligar à porta " + port + ", espere  ...");
-        ServerSocket ss;
+        ServerSocket ss = null;
 
-        ss = new ServerSocket(port);
+        try {
+            ss = new ServerSocket(port);
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
         System.out.println("Servidor iniciado: " + ss);
 
         Thread t = new Thread() {
@@ -257,7 +274,12 @@ public class Server {
         while (true) {
             System.out.println("À espera de Clientes ...");
 
-            Socket soc = ss.accept();//fica à espera da ligação
+            Socket soc = null;
+            try {
+                soc = ss.accept(); //fica à espera da ligação
+            } catch (IOException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
             System.out.println("Cliente aceite: " + soc);
 

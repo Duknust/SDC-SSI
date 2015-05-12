@@ -12,11 +12,20 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.classes.OOSUSER;
 import org.classes.Projecto;
 import org.classes.Utilizador;
 import org.tipos.Mensagem;
 import org.tipos.TipoOP;
+import org.tipos.requests.ReqActProj;
+import org.tipos.requests.ReqNotifEuros;
+import org.tipos.responses.RepAddEuros;
+import org.tipos.responses.RepLogin;
+import org.tipos.responses.RepMapProj;
+import org.tipos.responses.RepProj;
+import org.tipos.responses.RepRegisto;
 
 public class ServeCliente extends Thread {
 
@@ -37,48 +46,46 @@ public class ServeCliente extends Thread {
         OutputStream outs = null;
         Mensagem recebido = null;
         Mensagem resposta = null;
-        TipoOP tipo;
         lido = false;
+        TipoOP tipo;
         String meunome = "";
-        //System.out.println("2");
+
         try {
             ins = cli.getInputStream();
             outs = cli.getOutputStream();
-            // System.out.println("3");
-        } catch (IOException i) {
-//            System.out.println("IOE_" + i.toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, ex);
         }
-//        System.out.println("4");
+
         ObjectInputStream ois = null;
         ObjectOutputStream ous = null;
+
         try {
             ois = new ObjectInputStream(ins);
             ous = new ObjectOutputStream(outs);
-
         } catch (IOException ex) {
-            System.out.println(ex.toString());
+            Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, ex);
         }
+
         os = new OOSUSER("", ous);
         Server.addoos(os);
         while (true) {
-//            System.out.println("1");
+
             recebido = null;
             resposta = null;
             tipo = TipoOP.NULL;
+
             try {
                 System.out.println("/ESPERANDO PACOTES NO SERVER");
                 recebido = (Mensagem) ois.readObject();
                 System.out.println("|RECEBI PACOTES NO SERVER");
 
-//                System.out.println("2");
                 if (recebido != null) {
                     tipo = recebido.getTipo();
-                    resposta = new Mensagem();
+                    //resposta = new Mensagem();
                     System.out.println("\\SERVER_RECEBI " + tipo + "\n");
                     switch (tipo) {
-
                         case NULL:
-
                             break;
                         case REQLOGIN:
 
@@ -86,35 +93,36 @@ public class ServeCliente extends Thread {
                             Utilizador contem = Server.getUtilizador(recebido.getUser().getNome());
                             if (contem != null) {//existe
                                 if (contem.equals(recebido.getUser()) == true) {//checka user e pass
-                                    resposta.criaREPLOGIN(1);
-                                    Mensagem act = new Mensagem();//Envia o map de projectos para encher o map do cliente
+                                    //resposta.criaREPLOGIN(1);
+                                    resposta = new RepLogin(1);
+                                    //Mensagem act = new Mensagem();//Envia o map de projectos para encher o map do cliente
                                     HashMap<String, Projecto> map = new HashMap<>(Server.getMapProjectos(0));
-                                    act.criaREPMAPPROJ(map);
+                                    Mensagem act = new RepMapProj(map);
+                                    //act.criaREPMAPPROJ(map);
                                     ous.writeObject(act);
                                     //Associa o OOS ao user
                                     meunome = contem.getNome();
                                     Server.adduser(ous, meunome);//adiciona ao map dos pares OOS/user
 
                                 } else {
-                                    resposta.criaREPLOGIN(0);
+                                    resposta = new RepLogin(0);
                                 }
                             } else {
-                                resposta.criaREPLOGIN(2);
+                                resposta = new RepLogin(2);
                             }
 
                             System.out.println("SERVER VAI ENVIAR  " + resposta.getTipo() + resposta.getValor1());
                             try {
                                 ous.writeObject(resposta);
                             } catch (IOException i) {
-                                System.out.println(i.toString());
+                                Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, i);
                             }
                             break;
 
                         case REQMAPPROJ:
 
                             HashMap<String, Projecto> map = new HashMap<>(Server.getMapProjectos(0));
-
-                            resposta.criaREPMAPPROJ(map);
+                            resposta = new RepMapProj(map);
 
                             ous.writeObject(resposta);
                             break;
@@ -127,15 +135,17 @@ public class ServeCliente extends Thread {
                                 Projecto proj = recebido.getProj();
                                 Server.addProjecto(proj);
 
-                                resposta.criaREPPROJ(1);
-
-                                Mensagem act = new Mensagem();
-                                act.criaACTPROJ(Server.getProjecto(nome));
+                                //resposta.criaREPPROJ(1);
+                                resposta = new RepProj(1);
+                                //Mensagem act = new Mensagem();
+                                Mensagem act = new ReqActProj(Server.getProjecto(nome));
+                                //act.criaACTPROJ();
                                 Server.enviaparatodos(act);
                                 //ous.writeObject(act);
 
                             } else {
-                                resposta.criaREPPROJ(0);
+                                resposta = new RepProj(0);
+                                //resposta.criaREPPROJ(0);
 
                             }
                             ous.writeObject(resposta);
@@ -151,26 +161,33 @@ public class ServeCliente extends Thread {
 
                                 int funca = Server.addEurosProj(nomeproj, recebido.getString2(), recebido.getValor1());//Adiciona euros e historico
                                 if (funca > 0) {
-                                    resposta.criaREPADDEUROS(1, recebido.getValor1(), nomeproj);
-                                    Mensagem p2 = new Mensagem();
-                                    p2.criaACTPROJ(projreqadde.clone());
+                                    resposta = new RepAddEuros(1, recebido.getValor1(), nomeproj);
+                                    //resposta.criaREPADDEUROS(1, , );
+                                    //Mensagem p2 = new Mensagem();
+                                    Mensagem p2 = new ReqActProj(projreqadde.clone());
+                                    //p2.criaACTPROJ();
                                     Server.enviaparatodos(p2);
                                     ous.writeObject(resposta);
                                     //ous.writeObject(p2);
                                     //notificar o criador do projecto
 
-                                    Mensagem p3 = new Mensagem();
-                                    p3.criaNOTIFEUROS(meunome, nomeproj, recebido.getValor1());
+                                    //Mensagem p3 = new Mensagem();
+                                    Mensagem p3 = new ReqNotifEuros(meunome, nomeproj, recebido.getValor1());
+                                    //p3.criaNOTIFEUROS(meunome, nomeproj, recebido.getValor1());
                                     Server.enviaparauser(p3, projreqadde.getUtilizador());
                                 } else if (funca == 0) {// NÃO EXISTE
-                                    resposta.criaREPADDEUROS(0, 0, nomeproj);
+                                    resposta = new RepAddEuros(0, 0, nomeproj);
+                                    //resposta.criaREPADDEUROS(0, 0, nomeproj);
+                                    ous.writeObject(resposta);
                                 } else {//-1 USER == DONO
-                                    resposta.criaREPADDEUROS(-1, recebido.getValor1(), nomeproj);
+                                    resposta = new RepAddEuros(-1, recebido.getValor1(), nomeproj);
+                                    //resposta.criaREPADDEUROS(-1, recebido.getValor1(), nomeproj);
                                     ous.writeObject(resposta);
                                 }
 
                             } else {
-                                resposta.criaREPADDEUROS(0, 0, nomeproj);
+                                //resposta.criaREPADDEUROS(0, 0, nomeproj);
+                                resposta = new RepAddEuros(0, 0, nomeproj);
                                 ous.writeObject(resposta);
                             }
 
@@ -184,9 +201,11 @@ public class ServeCliente extends Thread {
                             boolean registou = Server.addUtilizador(user);
                             if (registou == false)//nao existe
                             {
-                                resposta.criaREPREGISTO(nomere, 1);
+                                resposta = new RepRegisto(nomere, 1);
+                                //resposta.criaREPREGISTO(nomere, 1);
                             } else {
-                                resposta.criaREPREGISTO(nomere, 0);
+                                resposta = new RepRegisto(nomere, 0);
+                                //resposta.criaREPREGISTO(nomere, 0);
                             }
 
                             ous.writeObject(resposta);
@@ -198,7 +217,8 @@ public class ServeCliente extends Thread {
                             Server.adduser(ous, nomeretry);
                             HashMap<String, Projecto> mapretry = new HashMap<>(Server.getMapProjectos(0));
 
-                            resposta.criaREPMAPPROJ(mapretry);
+                            resposta = new RepMapProj(mapretry);
+                            //resposta.criaREPMAPPROJ(mapretry);
 
                             ous.writeObject(resposta);
                             break;
@@ -209,7 +229,8 @@ public class ServeCliente extends Thread {
                 }
 //                System.out.println("3");
             } catch (IOException | RuntimeException | ClassNotFoundException ex) {
-                System.out.println("IOC_" + ex.toString());
+                //System.out.println("IOC_" + ex.toString());
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                 Server.remove(os);
                 //Server.sair();
                 break;

@@ -12,6 +12,9 @@ import org.classes.Projecto;
 import org.servicos.ThreadClienteListener;
 import org.tipos.HashMapObs;
 import org.tipos.Mensagem;
+import org.tipos.requests.ReqMapProj;
+import org.tipos.requests.ReqProj;
+import org.tipos.requests.ReqReqRetry;
 import org.view.Inicio;
 import org.view.InterfaceSD;
 
@@ -30,11 +33,11 @@ public class Main {
     public static String userlogado = "";
     public static Thread ReqProjThread;
     public static Thread iniciaDadosThread;
-    public static double ReqProjectoInt;
-    public static double ReqLoginInt;//0 Pass errada - 1 OK - 2 Não existe esse user
+    public static int ReqProjectoInt;
+    public static int ReqLoginInt;//0 Pass errada - 1 OK - 2 Não existe esse user
     public static int ReqProjectoNomeInt;
     public static int ACTMAPInt;
-    public static double ReqRegisto;
+    public static int ReqRegisto;
     public static int activa;
     public static ThreadClienteListener tcl;
     public static InterfaceSD inter;
@@ -49,8 +52,9 @@ public class Main {
 
         Projecto p = new Projecto(Nome, Necessario, userlogado, Descricao);
 
-        Mensagem pa = new Mensagem();
-        pa.criaREQPROJ(p.clone());
+        //Mensagem pa = new Mensagem();
+        Mensagem pa = new ReqProj(p.clone());
+        //pa.criaREQPROJ(p.clone());
         enviaPacote(pa);
 
         try {
@@ -81,8 +85,9 @@ public class Main {
 
         //synchronized (iniciaDadosThread) {
         //Pedir os maps
-        Mensagem p = new Mensagem();
-        p.criaREQMAPPROJ();
+        //Mensagem p = new Mensagem();
+        Mensagem p = new ReqMapProj();
+        //p.criaREQMAPPROJ();
         enviaPacote(p);
 //        iniciaDadosThread = new Thread();
 //        iniciaDadosThread.start();
@@ -175,8 +180,9 @@ public class Main {
         if (Main.activa == 1)//esta ligado
         {
             Main.iniciathreadcliente();
-            Mensagem p = new Mensagem();
-            p.criaREQRETRY(Main.userlogado);
+            //Mensagem p = new Mensagem();
+            Mensagem p = new ReqReqRetry(userlogado);
+            //p.criaREQRETRY(Main.userlogado);
             Main.enviaPacote(p);
 
         }
