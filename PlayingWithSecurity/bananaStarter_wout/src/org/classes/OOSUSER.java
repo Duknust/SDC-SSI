@@ -7,27 +7,27 @@ package org.classes;
 
 import java.io.ObjectOutputStream;
 
-public class OOSUSER {
+public class OosUser {
 
-    String User;
+    String user;
     ObjectOutputStream oos;
 
-    public OOSUSER(String User, ObjectOutputStream oos) {
-        this.User = User;
+    public OosUser(String user, ObjectOutputStream oos) {
+        this.user = user;
         this.oos = oos;
     }
 
-    public OOSUSER() {
-        this.User = "";
+    public OosUser() {
+        this.user = "";
         this.oos = null;
     }
 
     public String getUser() {
-        return User;
+        return user;
     }
 
-    public synchronized void setUser(String User) {
-        this.User = User;
+    public synchronized void setUser(String user) {
+        this.user = user;
     }
 
     public ObjectOutputStream getOos() {

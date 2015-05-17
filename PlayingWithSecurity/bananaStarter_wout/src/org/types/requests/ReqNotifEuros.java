@@ -3,29 +3,29 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.tipos.requests;
+package org.types.requests;
 
-import org.tipos.Mensagem;
-import org.tipos.TipoOP;
+import org.types.Message;
+import org.types.TypeOP;
 
 /**
  *
  * @author duarteduarte
  */
-public class ReqNotifEuros extends Mensagem {
+public class ReqNotifEuros extends Message {
 
     public ReqNotifEuros(String username, String projectName, int euros) {
-        this.tipo = TipoOP.NOTIFEUROS;
+        this.type = TypeOP.NOTIFEUROS;
         this.string1 = username;
         this.string2 = projectName;
-        this.valor1 = euros;
+        this.value1 = euros;
     }
 
     public ReqNotifEuros(ReqNotifEuros rap) {
-        this.tipo = rap.getTipo();
+        this.type = rap.getType();
         this.string1 = rap.getString1();
         this.string2 = rap.getString2();
-        this.valor1 = rap.getValor1();
+        this.value1 = rap.getValue1();
     }
 
     @Override

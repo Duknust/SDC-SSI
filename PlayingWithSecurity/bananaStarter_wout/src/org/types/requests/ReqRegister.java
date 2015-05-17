@@ -3,31 +3,31 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.tipos.requests;
+package org.types.requests;
 
-import org.tipos.Mensagem;
-import org.tipos.TipoOP;
+import org.types.Message;
+import org.types.TypeOP;
 
 /**
  *
  * @author duarteduarte
  */
-public class ReqRegisto extends Mensagem {
+public class ReqRegister extends Message {
 
-    public ReqRegisto(String username, String pass) {
-        this.tipo = TipoOP.REQREGISTO;
+    public ReqRegister(String username, String pass) {
+        this.type = TypeOP.REQ_REGISTER;
         this.string1 = username;
         this.string2 = pass;
     }
 
-    public ReqRegisto(ReqRegisto rap) {
-        this.tipo = rap.getTipo();
+    public ReqRegister(ReqRegister rap) {
+        this.type = rap.getType();
         this.string1 = rap.getString1();
         this.string2 = rap.getString2();
     }
 
     @Override
-    public ReqRegisto clone() {
-        return new ReqRegisto(this);
+    public ReqRegister clone() {
+        return new ReqRegister(this);
     }
 }

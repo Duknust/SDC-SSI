@@ -3,25 +3,25 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.tipos.requests;
+package org.types.requests;
 
-import org.classes.Projecto;
-import org.tipos.Mensagem;
-import org.tipos.TipoOP;
+import org.classes.Project;
+import org.types.Message;
+import org.types.TypeOP;
 
 /**
  *
  * @author duarteduarte
  */
-public class ReqProj extends Mensagem {
+public class ReqProj extends Message {
 
-    public ReqProj(Projecto project) {
-        this.tipo = TipoOP.REQPROJ;
+    public ReqProj(Project project) {
+        this.type = TypeOP.REQ_PROJ;
         this.proj = project;
     }
 
     public ReqProj(ReqProj rap) {
-        this.tipo = rap.getTipo();
+        this.type = rap.getType();
         this.proj = rap.getProj();
     }
 

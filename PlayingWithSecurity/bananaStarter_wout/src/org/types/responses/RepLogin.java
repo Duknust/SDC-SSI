@@ -3,25 +3,25 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.tipos.responses;
+package org.types.responses;
 
-import org.tipos.Mensagem;
-import org.tipos.TipoOP;
+import org.types.Message;
+import org.types.TypeOP;
 
 /**
  *
  * @author duarteduarte
  */
-public class RepLogin extends Mensagem {
+public class RepLogin extends Message {
 
     public RepLogin(int log) {
-        this.tipo = TipoOP.REPLOGIN;
-        this.valor1 = log;
+        this.type = TypeOP.REP_LOGIN;
+        this.value1 = log;
     }
 
     public RepLogin(RepLogin rap) {
-        this.tipo = rap.getTipo();
-        this.valor1 = rap.getValor1();
+        this.type = rap.getType();
+        this.value1 = rap.getValue1();
     }
 
     @Override

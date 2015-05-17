@@ -5,35 +5,34 @@
  */
 package org.classes;
 
-import java.io.Serializable;
 import java.util.Objects;
 
-public class UserEuros implements Comparable<UserEuros>, Serializable {
+public class UserEuros implements Comparable<UserEuros> {
 
-    String nome;
+    String name;
     int euros;
 
     public UserEuros(String name, int eur) {
-        this.nome = name;
+        this.name = name;
         this.euros = eur;
     }
 
     UserEuros(UserEuros u1) {
-        this.nome = u1.getNome();
+        this.name = u1.getName();
         this.euros = u1.getEuros();
     }
 
     @Override
     public String toString() {
-        return nome + " : " + euros;
+        return name + " : " + euros;
     }
 
-    public String getNome() {
-        return nome;
+    public String getName() {
+        return name;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getEuros() {
@@ -74,7 +73,7 @@ public class UserEuros implements Comparable<UserEuros>, Serializable {
             return false;
         }
         final UserEuros other = (UserEuros) obj;
-        if (!Objects.equals(this.nome, other.nome)) {
+        if (!Objects.equals(this.name, other.name)) {
             return false;
         }
         return true;

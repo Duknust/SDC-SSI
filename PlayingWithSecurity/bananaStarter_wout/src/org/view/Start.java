@@ -12,22 +12,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.Main;
-import org.classes.Utilizador;
-import org.servicos.ServeCliente;
-import org.tipos.Mensagem;
-import org.tipos.requests.ReqLogin;
-import org.tipos.requests.ReqRegisto;
+import org.classes.User;
+import org.servicos.ClientHandler;
+import org.types.Message;
+import org.types.requests.ReqLogin;
+import org.types.requests.ReqRegister;
 
-public class Inicio extends javax.swing.JFrame {
+public class Start extends javax.swing.JFrame {
 
     /**
      * Creates new form Inicio
      */
-    public Inicio() {
+    public Start() {
         initComponents();
         this.setLocationRelativeTo(null);
 
-        if (Main.activa == 1) {//com ligação
+        if (Main.active == 1) {//com ligação
             activatudo();
         } else//sem ligação
         {
@@ -285,7 +285,7 @@ public class Inicio extends javax.swing.JFrame {
 
     private void jButtonLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoginActionPerformed
 
-        if (Main.activa == 1) {
+        if (Main.active == 1) {
 
             //boolean user = jTextField1.getText().equals("user");
             String user = jTextField1.getText();
@@ -295,35 +295,35 @@ public class Inicio extends javax.swing.JFrame {
                 password.append(c);
             }
 
-            //Mensagem login = new Mensagem();
-            Utilizador userpass = new Utilizador(user, password.toString());
+            //Mensagem login = new Message();
+            User userpass = new User(user, password.toString());
 
-            Mensagem login = new ReqLogin(userpass);
+            Message login = new ReqLogin(userpass);
             //login.criaREQLOGIN(userpass);
-            Main.enviaPacote(login);
+            Main.sendPackage(login);
             try {
-                while (Main.ReqLoginInt == -1.0) {
+                while (Main.reqLoginInt == -1.0) {
                     synchronized (this) {
                         this.wait();
                     }
                 }
             } catch (InterruptedException ex) {
-                Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("No wait do LOGIN " + ex.toString());
             }
-            if (Main.ReqLoginInt == 1) {//Registou entao loga o man
-                Main.ReqLoginInt = -1;
-                Main.userlogado = user;
-                Main.inicio.dispose();
-                Main.iniciaInterfaceSD();
+            if (Main.reqLoginInt == 1) {//Registou entao loga o man
+                Main.reqLoginInt = -1;
+                Main.userloggedIn = user;
+                Main.start.dispose();
+                Main.startInterfaceSD();
 
-            } else if (Main.ReqLoginInt == 0) {
+            } else if (Main.reqLoginInt == 0) {
 
                 JOptionPane.showMessageDialog(this, "Password inválida", "Error", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this, "Utilizador não existe", "Error", JOptionPane.INFORMATION_MESSAGE);
             }
-            Main.ReqLoginInt = -1;
+            Main.reqLoginInt = -1;
             jTextField1.setText(null);
             jPasswordField1.setText(null);
         } else {
@@ -355,7 +355,7 @@ public class Inicio extends javax.swing.JFrame {
 
     private void jButtonREGISTARActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonREGISTARActionPerformed
 
-        if (Main.activa == 1) {
+        if (Main.active == 1) {
 
             String nomer = jTextFieldRegistoNome.getText();
             char[] pass = jPasswordFieldInicio.getPassword();
@@ -366,33 +366,33 @@ public class Inicio extends javax.swing.JFrame {
 
             if (nomer.length() > 0 && password.length() > 0) {
 
-                //Mensagem pa = new Mensagem();
+                //Mensagem pa = new Message();
                 //pa.criaREQREGISTO(nomer, password.toString());
-                Mensagem pa = new ReqRegisto(nomer, password.toString());
-                Main.enviaPacote(pa);
+                Message pa = new ReqRegister(nomer, password.toString());
+                Main.sendPackage(pa);
 
                 try {
-                    while (Main.ReqRegisto == -1) {
+                    while (Main.reqRegister == -1) {
                         synchronized (this) {
                             this.wait();
                         }
                     }
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
                     System.out.println("No wait do Registo " + ex.toString());
                 }
 
-                if (Main.ReqRegisto == 1) {//registou
-                    Main.ReqRegisto = -1;
+                if (Main.reqRegister == 1) {//registou
+                    Main.reqRegister = -1;
 
-                    Main.userlogado = nomer;
+                    Main.userloggedIn = nomer;
                     JOptionPane.showMessageDialog(this, nomer + " Registado com sucesso!", null, JOptionPane.INFORMATION_MESSAGE);
-                    Main.inicio.dispose();
+                    Main.start.dispose();
 
-                    Main.iniciaInterfaceSD();
+                    Main.startInterfaceSD();
 
                 } else {
-                    Main.ReqRegisto = -1;
+                    Main.reqRegister = -1;
                     JOptionPane.showMessageDialog(this, "O nome de Utilizador " + nomer + " já existe", "Error", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
@@ -418,16 +418,16 @@ public class Inicio extends javax.swing.JFrame {
 
     private void jButtonTestarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTestarActionPerformed
         try {
-            Main.iniciasocket();
-            Main.activa = 1;
+            Main.startSocket();
+            Main.active = 1;
         } catch (IOException ex) {
-            Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, ex);
-            Main.activa = 0;
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            Main.active = 0;
         }
 
-        if (Main.activa == 1)//esta ligado
+        if (Main.active == 1)//esta ligado
         {
-            Main.iniciathreadcliente();
+            Main.startThreadClient();
             activatudo();
         } else {
             fechatudo();
@@ -451,20 +451,21 @@ public class Inicio extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Inicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Start.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Inicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Start.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Inicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Start.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Inicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Start.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Inicio().setVisible(true);
+                new Start().setVisible(true);
             }
         });
     }
@@ -502,7 +503,7 @@ public class Inicio extends javax.swing.JFrame {
             this.jPanelRegisto.wait(4000);
             this.jPanelLogin.wait(4000);
         } catch (InterruptedException ex) {
-            Logger.getLogger(Inicio.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         /*this.jPanelRegisto.setEnabled(false);

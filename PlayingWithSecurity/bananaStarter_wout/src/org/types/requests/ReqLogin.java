@@ -3,25 +3,25 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.tipos.requests;
+package org.types.requests;
 
-import org.classes.Utilizador;
-import org.tipos.Mensagem;
-import org.tipos.TipoOP;
+import org.classes.User;
+import org.types.Message;
+import org.types.TypeOP;
 
 /**
  *
  * @author duarteduarte
  */
-public class ReqLogin extends Mensagem {
+public class ReqLogin extends Message {
 
-    public ReqLogin(Utilizador userLogin) {
-        this.tipo = TipoOP.REQLOGIN;
+    public ReqLogin(User userLogin) {
+        this.type = TypeOP.REQ_LOGIN;
         this.user = userLogin;
     }
 
     public ReqLogin(ReqLogin rap) {
-        this.tipo = rap.getTipo();
+        this.type = rap.getType();
         this.proj = rap.getProj();
     }
 

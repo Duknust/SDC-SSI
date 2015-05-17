@@ -3,24 +3,24 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.tipos.requests;
+package org.types.requests;
 
-import org.tipos.Mensagem;
-import org.tipos.TipoOP;
+import org.types.Message;
+import org.types.TypeOP;
 
 /**
  *
  * @author duarteduarte
  */
-public class ReqReqRetry extends Mensagem {
+public class ReqReqRetry extends Message {
 
     public ReqReqRetry(String username) {
-        this.tipo = TipoOP.REQRETRY;
+        this.type = TypeOP.REQ_RETRY;
         this.string1 = username;
     }
 
     public ReqReqRetry(ReqReqRetry rap) {
-        this.tipo = rap.getTipo();
+        this.type = rap.getType();
         this.string1 = rap.getString1();
     }
 

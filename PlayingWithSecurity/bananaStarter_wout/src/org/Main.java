@@ -8,14 +8,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import org.classes.Projecto;
-import org.servicos.ThreadClienteListener;
-import org.tipos.HashMapObs;
-import org.tipos.Mensagem;
-import org.tipos.requests.ReqMapProj;
-import org.tipos.requests.ReqProj;
-import org.tipos.requests.ReqReqRetry;
-import org.view.Inicio;
+import org.classes.Project;
+import org.servicos.ThreadClientListener;
+import org.types.HashMapObs;
+import org.types.Message;
+import org.types.requests.ReqMapProj;
+import org.types.requests.ReqProj;
+import org.types.requests.ReqReqRetry;
+import org.view.Start;
 import org.view.InterfaceSD;
 
 /*
@@ -25,41 +25,41 @@ import org.view.InterfaceSD;
  */
 public class Main {
 
-    public static String formato;
-    public static HashMapObs mapProjectos;
+    public static String format;
+    public static HashMapObs mapProjects;
     public static Socket s;
     public static OutputStream os;
     public static ObjectOutputStream oos;
-    public static String userlogado = "";
-    public static Thread ReqProjThread;
-    public static Thread iniciaDadosThread;
-    public static int ReqProjectoInt;
-    public static int ReqLoginInt;//0 Pass errada - 1 OK - 2 Não existe esse user
-    public static int ReqProjectoNomeInt;
-    public static int ACTMAPInt;
-    public static int ReqRegisto;
-    public static int activa;
-    public static ThreadClienteListener tcl;
+    public static String userloggedIn = "";
+    public static Thread reqProjThread;
+    public static Thread initDataThread;
+    public static int reqProjectInt;
+    public static int reqLoginInt;//0 Pass errada - 1 OK - 2 Não existe esse user
+    public static int reqProjectNameInt;
+    public static int actMapInt;
+    public static int reqRegister;
+    public static int active;
+    public static ThreadClientListener tcl;
     public static InterfaceSD inter;
-    public static Inicio inicio;
+    public static Start start;
 
-    public static void notifica_interface() {
+    public static void notify_interface() {
 
         inter.notify();
     }
 
-    public static synchronized void submeteProjecto(String Nome, int Necessario, String Descricao) throws IOException {
+    public static synchronized void submitProject(String name, int goal, String description) throws IOException {
 
-        Projecto p = new Projecto(Nome, Necessario, userlogado, Descricao);
+        Project p = new Project(name, goal, userloggedIn, description);
 
-        //Mensagem pa = new Mensagem();
-        Mensagem pa = new ReqProj(p.clone());
+        //Mensagem pa = new Message();
+        Message pa = new ReqProj(p.clone());
         //pa.criaREQPROJ(p.clone());
-        enviaPacote(pa);
+        sendPackage(pa);
 
         try {
 
-            while (Main.ReqProjectoInt == -1) {
+            while (Main.reqProjectInt == -1) {
                 synchronized (Main.inter) {
                     Main.inter.wait();
                 }
@@ -68,36 +68,36 @@ public class Main {
             System.out.println(ex.toString());
         }
 
-        if (ReqProjectoInt == 1) {
-            JOptionPane.showMessageDialog(null, "Projecto Publicado");
-            mapProjectos.insereProjecto(p.clone());
+        if (reqProjectInt == 1) {
+            JOptionPane.showMessageDialog(null, "Project was published");
+            mapProjects.insertProject(p.clone());
         } else {
-            JOptionPane.showMessageDialog(null, "Já existe nome igual a esse");
+            JOptionPane.showMessageDialog(null, "There is a project with the same name");
         }
 
-        Main.ReqProjectoInt = -1;
+        Main.reqProjectInt = -1;
 
-        //mapProjectos.insereProjecto(p);
+        //mapProjectos.insertProject(p);
     }
 
-    public static void iniciaMapProjectos() {
+    public static void startMapProjects() {
         //Login feito entao actualizar os maps....
 
-        //synchronized (iniciaDadosThread) {
+        //synchronized (initDataThread) {
         //Pedir os maps
-        //Mensagem p = new Mensagem();
-        Mensagem p = new ReqMapProj();
+        //Mensagem p = new Message();
+        Message p = new ReqMapProj();
         //p.criaREQMAPPROJ();
-        enviaPacote(p);
-//        iniciaDadosThread = new Thread();
-//        iniciaDadosThread.start();
+        sendPackage(p);
+//        initDataThread = new Thread();
+//        initDataThread.start();
         try {
-            while (Main.ACTMAPInt == 0) {
+            while (Main.actMapInt == 0) {
                 synchronized (Main.inter) {
                     Main.inter.wait();
                 }
             }
-            Main.ACTMAPInt = 0;
+            Main.actMapInt = 0;
 
         } catch (InterruptedException ex) {
             System.out.println(ex.toString());
@@ -105,63 +105,63 @@ public class Main {
         // }
     }
 
-    public static void iniciaInterfaceSD() {
+    public static void startInterfaceSD() {
 
         inter = new InterfaceSD();
         inter.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         inter.setVisible(true);
-        Main.iniciaMapProjectos();
+        Main.startMapProjects();
 
     }
 
-    public static void iniciathreadcliente() {
+    public static void startThreadClient() {
         //Iniciar a thread de leitura do socket
-        tcl = new ThreadClienteListener(s);
+        tcl = new ThreadClientListener(s);
         tcl.start();
     }
 
-    public static void iniciasocket() throws IOException {
+    public static void startSocket() throws IOException {
         s = new Socket("localhost", 1337);
         os = s.getOutputStream();
         oos = new ObjectOutputStream(os);
     }
 
-    public static void stopligacao() {
+    public static void stopConnection() {
         try {
             Main.inter.addNotif("-----------------------------------------");
         } catch (NullPointerException n) {
         }
-        Main.activa = 0;
-        Main.stopthread();
-        Main.stopsocket();
+        Main.active = 0;
+        Main.stopThread();
+        Main.stopSocket();
         JOptionPane j = null;
         int showOptionDialog = 0;//SIM
         while (showOptionDialog == 0) {
-            showOptionDialog = j.showOptionDialog(Main.inter, "Perdeu-se a Ligação ao Servidor! Tentar de novo?", "Erro", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
+            showOptionDialog = j.showOptionDialog(Main.inter, "Connection was lost! Try again?", "Erro", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
             if (showOptionDialog == 0) {//SIM
-                Main.retrylig();
+                Main.retryConnection();
             }
 
-            if (Main.activa == 1) {
+            if (Main.active == 1) {
                 break;
             }
         }
 
-        if (Main.activa != 1) {
+        if (Main.active != 1) {
 
             System.exit(-1);
         }
 
     }
 
-    private static void stopthread() {
+    private static void stopThread() {
 
         if (Main.tcl.isAlive()) {
             Main.tcl.interrupt();
         }
     }
 
-    private static void stopsocket() {
+    private static void stopSocket() {
         try {
             Main.s.close();
         } catch (IOException ex) {
@@ -169,65 +169,65 @@ public class Main {
         }
     }
 
-    public static void retrylig() {
+    public static void retryConnection() {
         try {
-            Main.iniciasocket();
-            Main.activa = 1;
+            Main.startSocket();
+            Main.active = 1;
         } catch (IOException ex) {
-            Main.activa = 0;
+            Main.active = 0;
         }
 
-        if (Main.activa == 1)//esta ligado
+        if (Main.active == 1)//esta ligado
         {
-            Main.iniciathreadcliente();
-            //Mensagem p = new Mensagem();
-            Mensagem p = new ReqReqRetry(userlogado);
-            //p.criaREQRETRY(Main.userlogado);
-            Main.enviaPacote(p);
+            Main.startThreadClient();
+            //Mensagem p = new Message();
+            Message p = new ReqReqRetry(userloggedIn);
+            //p.criaREQRETRY(Main.userloggedIn);
+            Main.sendPackage(p);
 
         }
     }
 
-    public void addProjecto(Projecto p) {
-        mapProjectos.vals.put(p.getNome(), p);
+    public void addProject(Project p) {
+        mapProjects.vals.put(p.getName(), p);
     }
 
     public static void main(String[] args) {
-        ReqProjectoInt = -1;
-        ReqLoginInt = -1;
-        ReqProjectoNomeInt = -1;
-        ReqProjectoInt = -1;
-        ACTMAPInt = -1;
-        ReqRegisto = -1;
+        reqProjectInt = -1;
+        reqLoginInt = -1;
+        reqProjectNameInt = -1;
+        reqProjectInt = -1;
+        actMapInt = -1;
+        reqRegister = -1;
         //Interface
         //Fazer o connect com o socket
         try {
-            iniciasocket();
-            activa = 1;
+            startSocket();
+            active = 1;
         } catch (IOException ex) {
-            activa = 0;
+            active = 0;
         }
-        if (activa == 1) {
-            iniciathreadcliente();
+        if (active == 1) {
+            startThreadClient();
         }
 
         //inicializar os dados
-        formato = "dd/MM/yyyy HH:mm:ss";
+        format = "dd/MM/yyyy HH:mm:ss";
 
-        mapProjectos = new HashMapObs();
+        mapProjects = new HashMapObs();
 
-        inicio = new Inicio();
-        inicio.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        inicio.setVisible(true);
+        start = new Start();
+        start.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        start.setVisible(true);
     }
 
-    public static void enviaPacote(Mensagem p) {//So envia pedidos sem dados
+    public static void sendPackage(Message p) {//So envia pedidos sem dados
 
         if (p != null) {
 
             try {
                 oos.writeObject(p);
-                System.out.println("envia " + p.getTipo());
+                System.out.println("envia " + p.getType());
             } catch (IOException ex) {
                 System.out.println(ex.toString());
             }
@@ -250,7 +250,7 @@ public class Main {
      Utilizador u1 = new Utilizador("USER1", "PASS");
      Utilizador u2 = new Utilizador("USER2", "PASS");
      Utilizador u3 = new Utilizador("USER3", "PASS");
-     p1 = new Projecto("Caneta de Chocolate", 500, 1, 10);
+     p1 = new Project("Caneta de Chocolate", 500, 1, 10);
 
      Timer timer = new Timer();
      //
@@ -278,10 +278,10 @@ public class Main {
      while (p1.isFinalizado() == false) {
      System.out.println(p1.isFinalizado());
      Scanner keyboard = new Scanner(System.in);
-     System.out.println(p1.printEstado());
+     System.out.println(p1.printStatus());
      System.out.println("Quanto?:");
      int myint = keyboard.nextInt();
-     if (p1.addeuros(myint)) {
+     if (p1.addEuros(myint)) {
      System.out.println("Adicionas-te " + myint + " €");
      } else {
      System.out.println("P1 já finalizado");

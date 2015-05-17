@@ -3,28 +3,28 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.tipos.responses;
+package org.types.responses;
 
-import org.tipos.Mensagem;
-import org.tipos.TipoOP;
+import org.types.Message;
+import org.types.TypeOP;
 
 /**
  *
  * @author duarteduarte
  */
-public class RepAddEuros extends Mensagem {
+public class RepAddEuros extends Message {
 
     public RepAddEuros(int i, int euros, String nome) {
-        this.tipo = TipoOP.REPADDEUROS;
-        this.valor1 = i;//1 OK _ 0 FALHOU
-        this.valor2 = euros;
+        this.type = TypeOP.REP_ADD_EUROS;
+        this.value1 = i;//1 OK _ 0 FALHOU
+        this.value2 = euros;
         this.string1 = nome;
     }
 
     public RepAddEuros(RepAddEuros rap) {
-        this.tipo = rap.getTipo();
-        this.valor1 = rap.getValor1();
-        this.valor2 = rap.getValor2();
+        this.type = rap.getType();
+        this.value1 = rap.getValue1();
+        this.value2 = rap.getValue2();
         this.string1 = rap.getString1();
     }
 

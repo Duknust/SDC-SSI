@@ -3,25 +3,25 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.tipos.responses;
+package org.types.responses;
 
-import org.tipos.Mensagem;
-import org.tipos.TipoOP;
+import org.types.Message;
+import org.types.TypeOP;
 
 /**
  *
  * @author duarteduarte
  */
-public class RepProj extends Mensagem {
+public class RepProj extends Message {
 
     public RepProj(int i) {
-        this.tipo = TipoOP.REPPROJ;
-        this.valor1 = i;
+        this.type = TypeOP.REP_PROJ;
+        this.value1 = i;
     }
 
     public RepProj(RepProj rap) {
-        this.tipo = rap.getTipo();
-        this.valor1 = rap.getValor1();
+        this.type = rap.getType();
+        this.value1 = rap.getValue1();
     }
 
     @Override

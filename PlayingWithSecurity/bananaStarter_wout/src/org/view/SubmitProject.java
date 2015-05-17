@@ -9,16 +9,16 @@ import java.io.IOException;
 import javax.swing.JOptionPane;
 import org.Main;
 
-public class SubmeterProjecto extends javax.swing.JFrame {
+public class SubmitProject extends javax.swing.JFrame {
 
     /**
      * Creates new form ProporProjecto
      */
-    public SubmeterProjecto() {
+    public SubmitProject() {
         initComponents();
     }
 
-    public SubmeterProjecto(InterfaceSD t) {
+    public SubmitProject(InterfaceSD t) {
         initComponents();
         this.setLocationRelativeTo(null);
     }
@@ -133,7 +133,7 @@ public class SubmeterProjecto extends javax.swing.JFrame {
             String nome = jTextField1.getText(), desc = jTextPaneDescSP.getText();
 
             if (nome.compareTo("") != 0 && desc.compareTo("") != 0 && euros > 0) {
-                Main.submeteProjecto(nome, euros, desc);
+                Main.submitProject(nome, euros, desc);
             } else {
                 JOptionPane.showMessageDialog(null, "A sua proposta contém erros!");
             }
@@ -158,20 +158,21 @@ public class SubmeterProjecto extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(SubmeterProjecto.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(SubmitProject.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(SubmeterProjecto.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(SubmitProject.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(SubmeterProjecto.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(SubmitProject.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(SubmeterProjecto.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(SubmitProject.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new SubmeterProjecto().setVisible(true);
+                new SubmitProject().setVisible(true);
             }
         });
     }

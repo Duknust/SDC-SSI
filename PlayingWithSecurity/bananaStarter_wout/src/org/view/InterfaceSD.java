@@ -15,10 +15,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import org.Main;
-import org.classes.Projecto;
-import org.servicos.ServeCliente;
-import org.tipos.Mensagem;
-import org.tipos.requests.ReqAddEuros;
+import org.classes.Project;
+import org.servicos.ClientHandler;
+import org.types.Message;
+import org.types.requests.ReqAddEuros;
 
 public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runnable */ {
 
@@ -40,10 +40,10 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
 
     public void actmeusprojs() {
         listProjsModel.clear();
-        if (Main.userlogado.compareTo("") != 0) {
-            for (Projecto p : Main.mapProjectos.vals.values()) {
-                if (p.getUtilizador().compareTo(Main.userlogado) == 0) {
-                    listProjsModel.addElement(p.getNome());
+        if (Main.userloggedIn.compareTo("") != 0) {
+            for (Project p : Main.mapProjects.vals.values()) {
+                if (p.getUser().compareTo(Main.userloggedIn) == 0) {
+                    listProjsModel.addElement(p.getName());
                 }
             }
         }
@@ -53,19 +53,19 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
 
         String cena = jTextFieldProjUser.getText();
 
-        if (Main.mapProjectos.vals.containsKey(cena)) {
-            Projecto p = Main.mapProjectos.vals.get(cena);
+        if (Main.mapProjects.vals.containsKey(cena)) {
+            Project p = Main.mapProjects.vals.get(cena);
             try {
 
-                jTextFieldProjUser.setText(p.getUtilizador());
-                jTextFieldProjNome.setText(p.getNome());
-                jTextField2.setText(String.valueOf(p.getNecessario()));
-                jTextField3.setText(String.valueOf(p.getActual()));
+                jTextFieldProjUser.setText(p.getUser());
+                jTextFieldProjNome.setText(p.getName());
+                jTextField2.setText(String.valueOf(p.getGoal()));
+                jTextField3.setText(String.valueOf(p.getPledged()));
                 jTextField4.setText("1");
-                jTextPaneDescricao.setText(p.getDescricao());
+                jTextPaneDescricao.setText(p.getDescription());
 
             } catch (IndexOutOfBoundsException e) {
-                Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, e);
+                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
             }
         }
 
@@ -82,11 +82,11 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
             dtm.removeRow(0);
         }
 
-        HashMap<String, Projecto> lm = Main.mapProjectos.vals;
+        HashMap<String, Project> lm = Main.mapProjects.vals;
         boolean finalizado = jCheckBox1.isSelected();
-        for (Projecto e : lm.values()) {
-            if (e.isFinanciado() == finalizado) {
-                dtm.addRow(new Object[]{e.getNome(), e.getNecessario(), e.getActual(), e.getDescricao(), e.getUtilizador()});
+        for (Project e : lm.values()) {
+            if (e.isFinanciated() == finalizado) {
+                dtm.addRow(new Object[]{e.getName(), e.getGoal(), e.getPledged(), e.getDescription(), e.getUser()});
             }
 
             //JOptionPane.showMessageDialog(null, "add:" + e.getNome());
@@ -94,8 +94,8 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
 
     }
 
-    public void addNotif(Mensagem p) {
-        listNotifsModel.addElement(p.getString2() + " _ " + p.getString1() + " -> " + p.getValor1() + " €");
+    public void addNotif(Message p) {
+        listNotifsModel.addElement(p.getString2() + " _ " + p.getString1() + " -> " + p.getValue1() + " €");
     }
 
     public void addNotif(String p) {
@@ -135,10 +135,10 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
         jTableListaProjectos.getColumnModel()
                 .getColumn(4).setMaxWidth(0);
         tabelaaction();
-        Main.mapProjectos.addObserver(this);
+        Main.mapProjects.addObserver(this);
         mostrartudo();
 
-        jLabel2.setText("Olá " + Main.userlogado);
+        jLabel2.setText("Olá " + Main.userloggedIn);
 
     }
 
@@ -279,14 +279,14 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
                     jTextField4.setText("1");
                     jTextPaneDescricao.setText(jTableListaProjectos.getValueAt(jTableListaProjectos.getSelectedRow(), 3).toString());
                     //System.out.println(jTableListaProjectos.getValueAt(jTableListaProjectos.getSelectedRow(), 0).toString());
-                    if (jTextFieldProjUser.getText().compareTo(Main.userlogado) == 0) {
+                    if (jTextFieldProjUser.getText().compareTo(Main.userloggedIn) == 0) {
                         jButtonOferecer.setToolTipText("Não pode oferecer a projectos seus!");
                         jButtonOferecer.setEnabled(false);
                     } else {
                         jButtonOferecer.setEnabled(true);
                     }
                 } catch (IndexOutOfBoundsException e) {
-                    Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, e);
+                    Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
                 }
             }
         });
@@ -298,8 +298,8 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
                 // print first column value from selected row
                 try {
                     String nomeP = jListMeusProjs.getSelectedValue().toString();
-                    Projecto p = Main.mapProjectos.vals.get(nomeP);
-                    int actual = p.getActual(), necessario = p.getNecessario();
+                    Project p = Main.mapProjects.vals.get(nomeP);
+                    int actual = p.getPledged(), necessario = p.getGoal();
 
                     if (actual >= necessario) {
                         jTextFieldMPEstado.setText("FINANCIDADO");
@@ -314,9 +314,9 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
                     jTextFieldMPNec.setText(String.valueOf(necessario));
                     //System.out.println(jTableListaProjectos.getValueAt(jTableListaProjectos.getSelectedRow(), 0).toString());
                 } catch (IndexOutOfBoundsException e) {
-                    Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, e);
+                    Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, e);
                 } catch (NullPointerException n) {
-                    Logger.getLogger(ServeCliente.class.getName()).log(Level.SEVERE, null, n);
+                    Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, n);
                 }
             }
         });
@@ -797,7 +797,7 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
 
-        SubmeterProjecto sp = new SubmeterProjecto(this);
+        SubmitProject sp = new SubmitProject(this);
         sp.setVisible(true);
 
     }//GEN-LAST:event_jButton3ActionPerformed
@@ -819,10 +819,10 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
             String nome = jTextFieldProjNome.getText();
 
             if (nome.compareTo("") != 0) {
-                //Mensagem p = new Mensagem();
-                //p.criaREQADDEUROS(valor, jTextFieldProjNome.getText(), Main.userlogado/*jTableListaProjectos.getValueAt(jTableListaProjectos.getSelectedRow(), 0).toString()*/);
-                Mensagem p = new ReqAddEuros(valor, jTextFieldProjNome.getText(), Main.userlogado);
-                Main.enviaPacote(p);
+                //Mensagem p = new Message();
+                //p.criaREQADDEUROS(valor, jTextFieldProjNome.getText(), Main.userloggedIn/*jTableListaProjectos.getValueAt(jTableListaProjectos.getSelectedRow(), 0).toString()*/);
+                Message p = new ReqAddEuros(valor, jTextFieldProjNome.getText(), Main.userloggedIn);
+                Main.sendPackage(p);
             } else {
                 JOptionPane.showMessageDialog(null, "Não é válido");
             }
@@ -871,13 +871,6 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
         try {
             nc = Integer.parseInt(jTextFieldMPMaisCon.getText());
         } catch (NumberFormatException numberFormatException) {
-            JOptionPane.showMessageDialog(null, nc + " - Não é válido");
-        }
-
-        MaisContrib mc;
-        if (nc > -1) {
-            mc = new MaisContrib(nomeProj, nc);
-        } else {
             JOptionPane.showMessageDialog(null, nc + " - Não é válido");
         }
     }//GEN-LAST:event_jButtonVerContribActionPerformed
@@ -989,17 +982,16 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
     // End of variables declaration//GEN-END:variables
 
     public void pesquisa(String text) {
-        HashMap<String, Projecto> result = new HashMap<>();
-        boolean finalizado = jCheckBox1.isSelected();
-
+        boolean finalized = jCheckBox1.isSelected();
+        HashMap<String, Project> result = null;
         if (text.compareTo("") != 0) {
-            result = Main.mapProjectos.getbynome(text, finalizado);
+            result = Main.mapProjects.getByName(text, finalized);
 
         } else {
-            if (finalizado == false) {
-                result = Main.mapProjectos.getactivos();
+            if (finalized == false) {
+                result = Main.mapProjects.getActives();
             } else {
-                result = Main.mapProjectos.getfinalizados();
+                result = Main.mapProjects.getFinalized();
             }
         }
 
@@ -1008,9 +1000,9 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
         }
 
         if (result.size() > 0) {
-            for (Projecto e : result.values()) {
+            for (Project e : result.values()) {
 
-                dtm.addRow(new Object[]{e.getNome(), e.getNecessario(), e.getActual(), e.getDescricao(), e.getUtilizador()});
+                dtm.addRow(new Object[]{e.getName(), e.getGoal(), e.getPledged(), e.getDescription(), e.getUser()});
 
                 //JOptionPane.showMessageDialog(null, "add:" + e.getNome());
             }
