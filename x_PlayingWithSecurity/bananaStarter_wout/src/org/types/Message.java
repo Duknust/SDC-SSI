@@ -5,20 +5,39 @@
  */
 package org.types;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.thoughtworks.xstream.annotations.XStreamInclude;
 import java.io.Serializable;
 import java.util.HashMap;
 import org.classes.Project;
 import org.classes.User;
+import org.types.requests.ReqActProj;
+import org.types.requests.ReqAddEuros;
 
+@XStreamInclude({ReqActProj.class, ReqAddEuros.class})
 public abstract class Message implements Serializable {
 
+    @XStreamAlias("type")
+    @XStreamAsAttribute
     protected TypeOP type;
+    @XStreamAlias("project")
     protected Project proj;
+    @XStreamAlias("user")
     protected User user;
+    @XStreamAlias("projects")
     protected HashMap<String, Project> mp;
+    @XStreamAlias("string1")
+    @XStreamAsAttribute
     protected String string1;
+    @XStreamAlias("string2")
+    @XStreamAsAttribute
     protected String string2;
+    @XStreamAlias("value1")
+    @XStreamAsAttribute
     protected int value1;
+    @XStreamAlias("value2")
+    @XStreamAsAttribute
     protected int value2;
 
     public Message() {

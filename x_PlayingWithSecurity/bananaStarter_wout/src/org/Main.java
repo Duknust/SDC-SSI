@@ -1,11 +1,30 @@
 package org;
 
+import com.thoughtworks.xstream.XStream;
+import diffiehellman.Client;
+import diffiehellman.DiffieHellman;
+import diffiehellman.SignatureKeypairGenerator;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.SecretKey;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import org.classes.Project;
@@ -42,6 +61,8 @@ public class Main {
     public static ThreadClientListener tcl;
     public static InterfaceSD inter;
     public static Start start;
+
+    private PublicKey serverPublicKey;
 
     public static void notify_interface() {
 
@@ -235,58 +256,96 @@ public class Main {
         }
 
     }
-    /*
-     public static synchronized int getinccodU() {
-     codUtilizadores++;
-     return codUtilizadores - 1;
-     }
 
-     public static synchronized int getinccodP() {
-     codProjectos++;
-     return codProjectos - 1;
-     }
+    public Socket connectServer(String host, int port) {
+        Socket socket = null;
+        try {
+            socket = new Socket(host, port);
 
-     public static void teste() {
-     Utilizador u1 = new Utilizador("USER1", "PASS");
-     Utilizador u2 = new Utilizador("USER2", "PASS");
-     Utilizador u3 = new Utilizador("USER3", "PASS");
-     p1 = new Project("Caneta de Chocolate", 500, 1, 10);
+            BufferedReader fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            BufferedWriter toServer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-     Timer timer = new Timer();
-     //
-     //        timer.schedule(new TimerTask() {
-     //
-     //            @Override
-     //            public void run() {
-     //              Calendar date1 = Calendar.getInstance();
-     //              if(p1.isFinalizado()==false)//JA ACABOU ?
-     //                  System.out.println("date1:" + date1.getTime() + "p1:" + p1.getFim().getTime() + "\n" + date1.before(p1.getFim().getTime()));
-     //                if(date1.getTimeInMillis()>p1.getFim().getTimeInMillis()){//SE DATA FIM > ACTUAL -> ACABAR
-     //                    p1.setFinalizado(true);
-     //                    System.out.println("P1-ACABOU!");
-     //                    System.out.println(p1.toString());
-     //                    this.cancel();//PARA O TIMER
-     //                }
-     //            }
-     //          }, 1000,1000);
+            DiffieHellman dh = new DiffieHellman();
+            KeyPair mineKeys = dh.generateKeyPair();
 
-     System.out.println(u1.toString());
-     System.out.println(u2.toString());
-     System.out.println(u3.toString());
-     System.out.println(p1.toString());
+            toServer.write(Base64.getEncoder().encodeToString(mineKeys.getPublic().getEncoded()) + "\n");
+            toServer.flush();
+            byte[] otherPublicKeyBytes = Base64.getDecoder().decode(fromServer.readLine().trim());
 
-     while (p1.isFinalizado() == false) {
-     System.out.println(p1.isFinalizado());
-     Scanner keyboard = new Scanner(System.in);
-     System.out.println(p1.printStatus());
-     System.out.println("Quanto?:");
-     int myint = keyboard.nextInt();
-     if (p1.addEuros(myint)) {
-     System.out.println("Adicionas-te " + myint + " €");
-     } else {
-     System.out.println("P1 já finalizado");
-     }
-     }
+            KeyFactory keyFactDH = KeyFactory.getInstance("DH");
+            X509EncodedKeySpec ks = new X509EncodedKeySpec(otherPublicKeyBytes);
 
-     }*/
+            PublicKey otherPublicKey = keyFactDH.generatePublic(ks);
+            SecretKey sessionKey = dh.getSessionKey(mineKeys.getPrivate(), otherPublicKey);
+
+            byte[] iv = Base64.getDecoder().decode(fromServer.readLine());
+
+            KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey("client");
+
+            //read server public key (sig)
+            KeyFactory keyFactRSA = KeyFactory.getInstance("RSA");
+            PublicKey signatureServerPublicKey = keyFactRSA.generatePublic(
+                    new X509EncodedKeySpec(
+                            Base64.getDecoder().decode(
+                                    fromServer.readLine())));
+
+            //write to server publickey
+            toServer.write(Base64.getEncoder().encodeToString(
+                    new X509EncodedKeySpec(signatureKeys.getPublic().getEncoded()).getEncoded()) + "\n");
+            toServer.flush();
+
+            //create signature
+            Signature sig = Signature.getInstance("SHA1withRSA");
+            sig.initSign(signatureKeys.getPrivate());
+
+            sig.update(signatureKeys.getPublic().getEncoded());
+            sig.update(signatureServerPublicKey.getEncoded());
+
+            //write signature of client public key and server public key
+            toServer.write(Base64.getEncoder().encodeToString(dh.encryptMessage(sessionKey, sig.sign(), iv)) + "\n");
+            toServer.flush();
+
+            //read server signature
+            byte[] sigServer = dh.decypherMessage(sessionKey, Base64.getDecoder().decode(fromServer.readLine()), iv);
+
+            Signature sigFromServer = Signature.getInstance("SHA1withRSA");
+            sigFromServer.initVerify(signatureServerPublicKey);
+            sigFromServer.update(signatureServerPublicKey.getEncoded());
+            sigFromServer.update(signatureKeys.getPublic().getEncoded());
+            if (!sigFromServer.verify(sigServer)) {
+                toServer.close();
+                fromServer.close();
+                System.err.println("[CLIENT] Wrong signature");
+                System.exit(0);
+            }
+
+            this.serverPublicKey = signatureServerPublicKey;
+
+        } catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException | InvalidKeyException | SignatureException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return socket;
+    }
+
+    public void sjafa(Message msg) {
+        try {
+            XStream serializer = new XStream();
+            serializer.processAnnotations(Message.class);
+            String message = serializer.toXML(msg);
+
+            KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey("client");
+
+            Signature sig = Signature.getInstance("SHA1withRSA");
+            sig.initSign(signatureKeys.getPrivate());
+            sig.update(message.getBytes());
+
+            byte[] clientMessageBytes = dh.generateMAC(sessionKey, message.getBytes(), iv);
+            toServer.write(Base64.getEncoder().encodeToString(clientMessageBytes) + Base64.getEncoder().encodeToString(sig.sign()) + "\n");
+            toServer.flush();
+        } catch (InvalidKeyException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
