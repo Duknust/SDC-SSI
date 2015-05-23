@@ -1,4 +1,4 @@
-package diffiehellman;
+package org.security.diffiehellman;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -19,6 +19,8 @@ import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.SecretKey;
+import org.security.diffiehellman.DiffieHellman;
+import org.security.diffiehellman.SignatureKeypairGenerator;
 
 public class Client {
 
@@ -48,7 +50,7 @@ public class Client {
 
             byte[] iv = Base64.getDecoder().decode(fromServer.readLine());
 
-            SignatureKeypairGenerator.toFile("client");
+            //SignatureKeypairGenerator.toFile("client");
             KeyPair signatureKeys = SignatureKeypairGenerator.fromFile("client");
 
             //read server public key (sig)

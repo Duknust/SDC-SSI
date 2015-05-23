@@ -14,9 +14,9 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
-import org.Main;
+import org.client.Main;
 import org.classes.Project;
-import org.servicos.ClientHandler;
+import org.services.ClientHandler;
 import org.types.Message;
 import org.types.requests.ReqAddEuros;
 

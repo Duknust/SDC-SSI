@@ -5,6 +5,7 @@
  */
 package org.types.responses;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import java.util.HashMap;
 import org.classes.Project;
 import org.types.Message;
@@ -14,6 +15,7 @@ import org.types.TypeOP;
  *
  * @author duarteduarte
  */
+@XStreamAlias("repmapproj")
 public class RepMapProj extends Message {
 
     public RepMapProj(HashMap<String, Project> map) {

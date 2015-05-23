@@ -5,6 +5,7 @@
  */
 package org.types.requests;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.types.Message;
 import org.types.TypeOP;
 
@@ -12,6 +13,7 @@ import org.types.TypeOP;
  *
  * @author duarteduarte
  */
+@XStreamAlias("reqnotifeuros")
 public class ReqNotifEuros extends Message {
 
     public ReqNotifEuros(String username, String projectName, int euros) {

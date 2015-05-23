@@ -14,8 +14,20 @@ import org.classes.Project;
 import org.classes.User;
 import org.types.requests.ReqActProj;
 import org.types.requests.ReqAddEuros;
+import org.types.requests.ReqAddProj;
+import org.types.requests.ReqLogin;
+import org.types.requests.ReqMapProj;
+import org.types.requests.ReqNotifEuros;
+import org.types.requests.ReqProj;
+import org.types.requests.ReqRegister;
+import org.types.requests.ReqReqRetry;
+import org.types.responses.RepAddEuros;
+import org.types.responses.RepLogin;
+import org.types.responses.RepMapProj;
+import org.types.responses.RepProj;
+import org.types.responses.RepRegister;
 
-@XStreamInclude({ReqActProj.class, ReqAddEuros.class})
+@XStreamInclude({ReqActProj.class, ReqAddEuros.class, ReqAddProj.class, ReqLogin.class, ReqMapProj.class, ReqNotifEuros.class, ReqProj.class, ReqRegister.class, ReqReqRetry.class, RepAddEuros.class, RepLogin.class, RepMapProj.class, RepProj.class, RepRegister.class})
 public abstract class Message implements Serializable {
 
     @XStreamAlias("type")

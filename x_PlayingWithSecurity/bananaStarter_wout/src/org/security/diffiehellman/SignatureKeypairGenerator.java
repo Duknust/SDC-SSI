@@ -5,11 +5,11 @@
  */
 package org.security.diffiehellman;
 
-import com.sun.xml.internal.messaging.saaj.packaging.mime.util.BASE64DecoderStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -19,6 +19,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.security.certValidator.CertValidator;
@@ -37,27 +38,24 @@ public class SignatureKeypairGenerator {
         }
     }
 
+    private static String readFile(String path, Charset encoding)
+            throws IOException {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
+    }
+
     public static KeyPair fromFile(String filename) {
         KeyPair kp = null;
         try {
-            FileInputStream fisPub = new FileInputStream(filename + ".pub");
-            FileInputStream fisPriv = new FileInputStream(filename + ".priv");
+            byte[] pubKeyBytes = Base64.getDecoder().decode(readFile(filename + ".pub", Charset.forName("UTF-8")));
+            byte[] privKeyBytes = Base64.getDecoder().decode(readFile(filename + ".priv", Charset.forName("UTF-8")));
 
-            byte[] buffer = new byte[1024];
-
-            InputStream osDecoder = new BASE64DecoderStream(fisPub);
-            osDecoder.read(buffer);
-            fisPub.close();
-            X509EncodedKeySpec encodedpks = new X509EncodedKeySpec(buffer);
+            X509EncodedKeySpec encodedpks = new X509EncodedKeySpec(pubKeyBytes);
 
             KeyFactory kf = KeyFactory.getInstance("RSA");
             PublicKey pubk = kf.generatePublic(encodedpks);
 
-            buffer = new byte[1024];
-            osDecoder = new BASE64DecoderStream(fisPriv);
-            osDecoder.read(buffer);
-            fisPriv.close();
-            PKCS8EncodedKeySpec encpriv = new PKCS8EncodedKeySpec(buffer);
+            PKCS8EncodedKeySpec encpriv = new PKCS8EncodedKeySpec(privKeyBytes);
 
             PrivateKey privk = kf.generatePrivate(encpriv);
 

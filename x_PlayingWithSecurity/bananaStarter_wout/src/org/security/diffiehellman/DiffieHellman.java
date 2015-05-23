@@ -1,6 +1,6 @@
-package diffiehellman;
+package org.security.diffiehellman;
 
-import diffiehellman.exceptions.MessageNotAuthenticatedException;
+import org.security.diffiehellman.exceptions.MessageNotAuthenticatedException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;

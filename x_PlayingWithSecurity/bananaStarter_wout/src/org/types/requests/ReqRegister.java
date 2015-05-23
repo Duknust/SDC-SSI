@@ -5,6 +5,7 @@
  */
 package org.types.requests;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.types.Message;
 import org.types.TypeOP;
 
@@ -12,6 +13,7 @@ import org.types.TypeOP;
  *
  * @author duarteduarte
  */
+@XStreamAlias("reqregister")
 public class ReqRegister extends Message {
 
     public ReqRegister(String username, String pass) {

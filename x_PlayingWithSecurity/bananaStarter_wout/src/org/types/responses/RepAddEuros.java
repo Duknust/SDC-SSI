@@ -5,6 +5,7 @@
  */
 package org.types.responses;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.types.Message;
 import org.types.TypeOP;
 
@@ -12,6 +13,7 @@ import org.types.TypeOP;
  *
  * @author duarteduarte
  */
+@XStreamAlias("repaddeuros")
 public class RepAddEuros extends Message {
 
     public RepAddEuros(int i, int euros, String nome) {

@@ -5,6 +5,7 @@
  */
 package org.types.requests;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.classes.User;
 import org.types.Message;
 import org.types.TypeOP;
@@ -13,6 +14,7 @@ import org.types.TypeOP;
  *
  * @author duarteduarte
  */
+@XStreamAlias("reqlogin")
 public class ReqLogin extends Message {
 
     public ReqLogin(User userLogin) {

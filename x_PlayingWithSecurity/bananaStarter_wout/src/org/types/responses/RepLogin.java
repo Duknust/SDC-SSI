@@ -5,6 +5,7 @@
  */
 package org.types.responses;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.types.Message;
 import org.types.TypeOP;
 
@@ -12,6 +13,7 @@ import org.types.TypeOP;
  *
  * @author duarteduarte
  */
+@XStreamAlias("replogin")
 public class RepLogin extends Message {
 
     public RepLogin(int log) {
