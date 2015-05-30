@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -18,6 +20,10 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import org.security.diffiehellman.DiffieHellman;
 import org.security.diffiehellman.SignatureKeypairGenerator;
@@ -36,22 +42,33 @@ public class Client {
             BufferedWriter toConsole = new BufferedWriter(new OutputStreamWriter(System.out));
 
             DiffieHellman dh = new DiffieHellman();
-            KeyPair mineKeys = dh.generateKeyPair();
+            KeyPair mineKeys = dh.generateKeyPair(false);
 
-            toServer.write(Base64.getEncoder().encodeToString(mineKeys.getPublic().getEncoded()) + "\n");
+            Path currentRelativePath = Paths.get("");
+            String s = currentRelativePath.toAbsolutePath().toString();
+
+            //to Server (client writes first)
+            KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterClient/client.pem", s + "/certs/bananaStarterClient/clientkey.der");
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, SignatureKeypairGenerator.fromCert(s + "/certs/bananaStarterServer/server.pem"));
+            byte[] cipherDH = cipher.doFinal(mineKeys.getPublic().getEncoded());
+
+            toServer.write(Base64.getEncoder().encodeToString(cipherDH) + "\n");
             toServer.flush();
-            byte[] otherPublicKeyBytes = Base64.getDecoder().decode(fromServer.readLine().trim());
 
+            //from Server (now server writes)
+            byte[] dhSignedBytes = Base64.getDecoder().decode(fromServer.readLine().trim());
+            Cipher toDecrypt = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            toDecrypt.init(Cipher.DECRYPT_MODE, signatureKeys.getPrivate());
+            byte[] dhDecrypted = toDecrypt.doFinal(dhSignedBytes);
+
+            //dh agreement
             KeyFactory keyFactDH = KeyFactory.getInstance("DH");
-            X509EncodedKeySpec ks = new X509EncodedKeySpec(otherPublicKeyBytes);
-
+            X509EncodedKeySpec ks = new X509EncodedKeySpec(dhDecrypted);
             PublicKey otherPublicKey = keyFactDH.generatePublic(ks);
             SecretKey sessionKey = dh.getSessionKey(mineKeys.getPrivate(), otherPublicKey);
 
             byte[] iv = Base64.getDecoder().decode(fromServer.readLine());
-
-            //SignatureKeypairGenerator.toFile("client");
-            KeyPair signatureKeys = SignatureKeypairGenerator.fromFile("client");
 
             //read server public key (sig)
             KeyFactory keyFactRSA = KeyFactory.getInstance("RSA");
@@ -108,6 +125,12 @@ public class Client {
             toServer.close();
 
         } catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException | InvalidKeyException | SignatureException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchPaddingException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalBlockSizeException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (BadPaddingException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

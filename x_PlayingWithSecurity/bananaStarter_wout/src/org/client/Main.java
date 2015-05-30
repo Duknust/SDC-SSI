@@ -260,24 +260,45 @@ public class Main {
             toServer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
             dh = new DiffieHellman();
-            KeyPair mineKeys = dh.generateKeyPair();
+            KeyPair mineKeys = dh.generateKeyPair(true);
 
-            toServer.write(Base64.getEncoder().encodeToString(mineKeys.getPublic().getEncoded()) + "\n");
+            Path currentRelativePath = Paths.get("");
+            String s = currentRelativePath.toAbsolutePath().toString();
+            KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterClient/client.pem", s + "/certs/bananaStarterClient/clientkey.der");
+
+            //to Server (client writes first)
+            Signature sig = Signature.getInstance("SHA1withRSA");
+            sig.initSign(signatureKeys.getPrivate());
+            sig.update(mineKeys.getPublic().getEncoded());
+
+            toServer.write(Base64.getEncoder().encodeToString(signatureKeys.getPublic().getEncoded()) + "\n");
+            toServer.write(Base64.getEncoder().encodeToString(sig.sign()) + "\n");
             toServer.flush();
-            byte[] otherPublicKeyBytes = Base64.getDecoder().decode(fromServer.readLine().trim());
+
+            //from Server (now server writes)
+            byte[] dhBytes = Base64.getDecoder().decode(fromServer.readLine().trim());
+            byte[] dhSignedBytes = Base64.getDecoder().decode(fromServer.readLine().trim());
+
+            sig.initVerify(SignatureKeypairGenerator.getCert(s + "/certs/bananaStarterServer/server.pem"));
+            sig.update(dhBytes);
+            boolean validDHSig = sig.verify(dhSignedBytes);
+            if (!validDHSig) {
+                toServer.close();
+                socket.close();
+                return null;
+            }
 
             KeyFactory keyFactDH = KeyFactory.getInstance("DH");
-            X509EncodedKeySpec ks = new X509EncodedKeySpec(otherPublicKeyBytes);
+            X509EncodedKeySpec ks = new X509EncodedKeySpec(dhBytes);
 
             PublicKey otherPublicKey = keyFactDH.generatePublic(ks);
             sessionKey = dh.getSessionKey(mineKeys.getPrivate(), otherPublicKey);
 
             iv = Base64.getDecoder().decode(fromServer.readLine());
 
-            Path currentRelativePath = Paths.get("");
-            String s = currentRelativePath.toAbsolutePath().toString();
-            KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterClient/client.pem", s + "/certs/bananaStarterClient/clientkey.der");
-
+            //Path currentRelativePath = Paths.get("");
+            //String s = currentRelativePath.toAbsolutePath().toString();
+            //KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterClient/client.pem", s + "/certs/bananaStarterClient/clientkey.der");
             //read server public key (sig)
             KeyFactory keyFactRSA = KeyFactory.getInstance("RSA");
             PublicKey signatureServerPublicKey = keyFactRSA.generatePublic(
@@ -291,7 +312,7 @@ public class Main {
             toServer.flush();
 
             //create signature
-            Signature sig = Signature.getInstance("SHA1withRSA");
+            sig = Signature.getInstance("SHA1withRSA");
             sig.initSign(signatureKeys.getPrivate());
 
             sig.update(signatureKeys.getPublic().getEncoded());

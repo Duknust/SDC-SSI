@@ -15,6 +15,7 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -47,8 +48,8 @@ public class SignatureKeypairGenerator {
     public static KeyPair fromFile(String filename) {
         KeyPair kp = null;
         try {
-            byte[] pubKeyBytes = Base64.getDecoder().decode(readFile(filename + ".pub", Charset.forName("UTF-8")));
-            byte[] privKeyBytes = Base64.getDecoder().decode(readFile(filename + ".priv", Charset.forName("UTF-8")));
+            byte[] pubKeyBytes = Base64.getDecoder().decode(readFile(filename, Charset.forName("UTF-8")));
+            byte[] privKeyBytes = Base64.getDecoder().decode(readFile(filename, Charset.forName("UTF-8")));
 
             X509EncodedKeySpec encodedpks = new X509EncodedKeySpec(pubKeyBytes);
 
@@ -78,5 +79,22 @@ public class SignatureKeypairGenerator {
         kp = new KeyPair(clientPubKey, clientPrivKey);
 
         return kp;
+    }
+
+    public static PublicKey fromCert(String certFilename) {
+        PublicKey pk = null;
+
+        CertValidator cv = new CertValidator();
+        X509Certificate clientCert = cv.getCertFromFile(certFilename);
+        pk = clientCert.getPublicKey();
+
+        return pk;
+    }
+
+    public static Certificate getCert(String certFilename) {
+
+        CertValidator cv = new CertValidator();
+        X509Certificate clientCert = cv.getCertFromFile(certFilename);
+        return clientCert;
     }
 }
