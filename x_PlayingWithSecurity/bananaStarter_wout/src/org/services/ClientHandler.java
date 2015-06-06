@@ -258,12 +258,13 @@ public class ClientHandler extends Thread {
             String s = currentRelativePath.toAbsolutePath().toString();
             KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterServer/server.pem", s + "/certs/bananaStarterServer/serverkey.der");
 
-            Signature sig = Signature.getInstance("SHA1withRSA");
-
             //from Client (now server writes)
-            byte[] dhBytes = Base64.getDecoder().decode(fromClient.readLine().trim());
-            byte[] dhSignedBytes = Base64.getDecoder().decode(fromClient.readLine().trim());
+            String dhb64 = fromClient.readLine().trim();
+            String dhsigb64 = fromClient.readLine().trim();
+            byte[] dhBytes = Base64.getDecoder().decode(dhb64);
+            byte[] dhSignedBytes = Base64.getDecoder().decode(dhsigb64);
 
+            Signature sig = Signature.getInstance("SHA1withRSA");
             sig.initVerify(SignatureKeypairGenerator.getCert(s + "/certs/bananaStarterClient/client.pem"));
             sig.update(dhBytes);
             boolean validDHSig = sig.verify(dhSignedBytes);

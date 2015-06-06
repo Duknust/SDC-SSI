@@ -225,7 +225,7 @@ public class Main {
         reqProjectInt = -1;
         actMapInt = -1;
         reqRegister = -1;
-        connectServer("localhost", 1337);
+        s = connectServer("localhost", 1337);
         active = 1;
         if (active == 1) {
             startThreadClient();
@@ -270,14 +270,21 @@ public class Main {
             Signature sig = Signature.getInstance("SHA1withRSA");
             sig.initSign(signatureKeys.getPrivate());
             sig.update(mineKeys.getPublic().getEncoded());
-
-            toServer.write(Base64.getEncoder().encodeToString(signatureKeys.getPublic().getEncoded()) + "\n");
-            toServer.write(Base64.getEncoder().encodeToString(sig.sign()) + "\n");
+            byte[] signatureBytes = sig.sign();
+            toServer.write(Base64.getEncoder().encodeToString(mineKeys.getPublic().getEncoded()) + "\n");
+            toServer.write(Base64.getEncoder().encodeToString(signatureBytes) + "\n");
             toServer.flush();
 
+            if (!socket.isConnected() || socket.isClosed()) {
+                System.err.println("Unable to connect\n");
+                return null;
+            }
+
             //from Server (now server writes)
-            byte[] dhBytes = Base64.getDecoder().decode(fromServer.readLine().trim());
-            byte[] dhSignedBytes = Base64.getDecoder().decode(fromServer.readLine().trim());
+            String dhPubKey = fromServer.readLine().trim();
+            String dhPubKeySignature = fromServer.readLine().trim();
+            byte[] dhBytes = Base64.getDecoder().decode(dhPubKey);
+            byte[] dhSignedBytes = Base64.getDecoder().decode(dhPubKeySignature);
 
             sig.initVerify(SignatureKeypairGenerator.getCert(s + "/certs/bananaStarterServer/server.pem"));
             sig.update(dhBytes);
