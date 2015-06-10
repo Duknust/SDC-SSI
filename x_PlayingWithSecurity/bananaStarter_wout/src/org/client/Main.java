@@ -7,8 +7,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -29,6 +27,8 @@ import javax.crypto.SecretKey;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import org.classes.Project;
+import org.security.diffiehellman.exceptions.MessageNotAuthenticatedException;
+import org.services.ClientHandler;
 import org.types.HashMapObs;
 import org.types.Message;
 import org.types.requests.ReqMapProj;
@@ -47,8 +47,8 @@ public class Main {
     public static String format;
     public static HashMapObs mapProjects;
     public static Socket s;
-    public static OutputStream os;
-    public static ObjectOutputStream oos;
+    //public static OutputStream os;
+    //public static ObjectOutputStream oos;
     public static String userloggedIn = "";
     public static Thread reqProjThread;
     public static Thread initDataThread;
@@ -143,8 +143,8 @@ public class Main {
 
     public static void startSocket() throws IOException {
         s = new Socket("localhost", 1337);
-        os = s.getOutputStream();
-        oos = new ObjectOutputStream(os);
+        //os = s.getOutputStream();
+        //oos = new ObjectOutputStream(os);
     }
 
     public static void stopConnection() {
@@ -364,5 +364,25 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
+    }
+
+    public Message receiveMsg() {
+        Message msg = null;
+        try {
+            XStream serializer = new XStream(new StaxDriver());
+
+            String b64 = fromServer.readLine();
+            byte[] rcvMsg = Base64.getDecoder().decode(b64);
+
+            byte[] clientMessageBytes = this.dh.decodeMac(sessionKey, rcvMsg, iv);
+
+            String toBeParsed = new String(clientMessageBytes, "UTF-8");
+
+            msg = (Message) serializer.fromXML(toBeParsed);
+
+        } catch (IOException | MessageNotAuthenticatedException ex) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return msg;
     }
 }

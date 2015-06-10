@@ -1,5 +1,6 @@
 package org.security.diffiehellman;
 
+import java.io.ByteArrayInputStream;
 import org.security.diffiehellman.exceptions.MessageNotAuthenticatedException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -149,18 +150,39 @@ public class DiffieHellman {
     }
 
     public byte[] decypherMessage(SecretKey key, byte[] cypheredMessage, byte[] iv) {
+        byte[] buff = null;
+        byte[] block = new byte[16];
         byte[] message = null;
         try {
-            Cipher cipher = Cipher.getInstance("AES"); // AES/CBC/PKCS5Padding , AES/CBC/NoPadding , AES/CFB8/PKCS5Padding , AES/CFB8/NoPadding , AES/CFB/NoPadding
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); // AES/CBC/PKCS5Padding , AES/CBC/NoPadding , AES/CFB8/PKCS5Padding , AES/CFB8/NoPadding , AES/CFB/NoPadding
             if (this.needsIV) {
                 IvParameterSpec ivect = new IvParameterSpec(iv);
                 cipher.init(Cipher.DECRYPT_MODE, key, ivect);
             } else {
                 cipher.init(Cipher.DECRYPT_MODE, key);
             }
-            message = cipher.doFinal(cypheredMessage);
+
+            ByteArrayInputStream bais = new ByteArrayInputStream(cypheredMessage);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            int lenToread = 16;
+            while (bais.available() > 0) {
+                if (bais.available() < 16) {
+                    lenToread = bais.available();
+                }
+                buff = new byte[lenToread];
+                bais.read(buff, 0, lenToread);
+                baos.write(cipher.update(buff));
+            }
+
+            if ((message = cipher.doFinal()) != null) {
+                baos.write(message);
+            }
+
+            message = baos.toByteArray();
 
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException ex) {
+            Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
             Logger.getLogger(DiffieHellman.class.getName()).log(Level.SEVERE, null, ex);
         }
         return message;
@@ -169,7 +191,7 @@ public class DiffieHellman {
     public byte[] encryptMessage(SecretKey key, byte[] message, byte[] iv) {
         byte[] cyphered = null;
         try {
-            Cipher cipher = Cipher.getInstance("AES"); // AES/CBC/PKCS5Padding , AES/CBC/NoPadding , AES/CFB8/PKCS5Padding , AES/CFB8/NoPadding , AES/CFB/NoPadding
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding"); // AES/CBC/PKCS5Padding , AES/CBC/NoPadding , AES/CFB8/PKCS5Padding , AES/CFB8/NoPadding , AES/CFB/NoPadding
             if (this.needsIV) {
                 IvParameterSpec ivect = new IvParameterSpec(iv);
                 cipher.init(Cipher.ENCRYPT_MODE, key, ivect);

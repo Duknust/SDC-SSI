@@ -14,7 +14,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -38,6 +37,7 @@ import javax.crypto.SecretKey;
 import org.classes.OosUser;
 import org.classes.Project;
 import org.classes.User;
+import org.client.Main;
 import org.security.diffiehellman.SignatureKeypairGenerator;
 import org.types.Message;
 import org.types.TypeOP;
@@ -86,16 +86,15 @@ public class ClientHandler extends Thread {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        ObjectInputStream ois = null;
-        ObjectOutputStream ous = null;
+        /*ObjectInputStream ois = null;
+         ObjectOutputStream ous = null;
 
-        try {
-            ois = new ObjectInputStream(ins);
-            ous = new ObjectOutputStream(outs);
-        } catch (IOException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+         try {
+         ois = new ObjectInputStream(ins);
+         ous = new ObjectOutputStream(outs);
+         } catch (IOException ex) {
+         Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+         }*/
         os = new OosUser("", ous);
         Server.addoos(os);
         while (true) {
@@ -106,7 +105,8 @@ public class ClientHandler extends Thread {
 
             try {
                 System.out.println("/Waiting packages in Server");
-                received = (Message) ois.readObject();
+                received = this.receiveMsg();
+                //received = (Message) ois.readObject();
                 System.out.println("|Reveived packages in Server");
 
                 if (received != null) {
@@ -236,7 +236,7 @@ public class ClientHandler extends Thread {
 
                     read = true;
                 }
-            } catch (IOException | RuntimeException | ClassNotFoundException ex) {
+            } catch (IOException | RuntimeException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                 Server.remove(os);
                 break;
@@ -360,4 +360,18 @@ public class ClientHandler extends Thread {
         return msg;
     }
 
+    public Message sendMsg(Message msg) {
+        try {
+            this.serializer = new XStream(new StaxDriver());
+            this.serializer.processAnnotations(Message.class);
+            String message = this.serializer.toXML(msg);
+
+            byte[] clientMessageBytes = dh.generateMAC(sessionKey, message.getBytes(), iv);
+            toClient.write(Base64.getEncoder().encodeToString(clientMessageBytes) + "\n");
+            toClient.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
 }
