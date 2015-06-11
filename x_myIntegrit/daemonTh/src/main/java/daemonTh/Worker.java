@@ -2,29 +2,23 @@ package daemonTh;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
+import java.util.logging.Logger;
 
 public class Worker implements Runnable {
-	//static ArrayList<String> allFiles = new ArrayList<>();
-	static HashSet<String> allFiles = new HashSet<>();
-	//static ArrayList<byte[]> validFilesHash = null;
-	static HashMap<String,byte[]> validFilesHash = null;
-	static String path = "";
-	static boolean valid = true;
+	HashSet<String> allFiles = new HashSet<>();
+	HashMap<String,FileInfo> validFilesInfo = null;
+	HashMap<String,FileInfo> actualFilesInfo = null;
+	String path = "";
+	boolean valid = true,firstStart;
 
-	public Worker(HashMap<String,byte[]> validFilesHash, String path) {
-		this.validFilesHash = validFilesHash;
+	public Worker(String path,HashMap<String,FileInfo> validFilesInfo,boolean firstStart) {
 		this.path = path;
+		actualFilesInfo = new HashMap<>();
+		this.validFilesInfo = validFilesInfo;
+		this.firstStart = firstStart;
 	}
 
 	@Override
@@ -32,28 +26,27 @@ public class Worker implements Runnable {
 		boolean remainsValid = false;
 		while(valid) {
 			//path = "C:/Fraps/";
+			remainsValid = true;
 			listAllFiles(path, allFiles);
-			HashMap<String,byte[]> actualFilesHash = new HashMap<String,byte[]>();
 			for (String filename : allFiles) {
-				byte[] newHash = new byte[1024];
+				//byte[] newHash = new byte[1024];
 				try {
-					newHash = createChecksum(filename);
+					//newHash = createChecksum(filename);
+					FileInfo info = getInfo(filename);
+					if(firstStart)
+						saveFileInfo(info);
+					boolean ok = checkFileInfo(info);
+					if(ok==false){
+						remainsValid = false;
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				actualFilesHash.put(filename,newHash);
 			}
 
-			if (validFilesHash != null) {
-				//remainsValid = compareList(validFilesHash, actualFilesHash);
-				//remainsValid = validFilesHash.equals(actualFilesHash);
-				remainsValid = mapsAreEqual(validFilesHash, actualFilesHash);
-				//remainsValid = remainsValid;
-			} else {
-				validFilesHash = actualFilesHash;
-				remainsValid = true;
-			}
 			System.out.println("DONE, State:"+remainsValid);
+			if(firstStart)
+				firstStart=false;
 			try {
 				Thread.sleep(2000);
 			} catch (InterruptedException e) {
@@ -62,42 +55,46 @@ public class Worker implements Runnable {
 		}
 		notify();
 	}
-/*
-	public static void main(String[] args) {
-		path = "C:/Fraps/";
-		listAllFiles(path, allFiles);
-		ArrayList<byte[]> actualFilesHash = new ArrayList<byte[]>();
-		for (String filename : allFiles) {
-			byte[] newHash = calculateHash(filename);
-			actualFilesHash.add(newHash);
-		}
-		boolean remainsValid = false;
-		if (validFilesHash != null) {
-			remainsValid = compareList(validFilesHash, actualFilesHash);
-			Main.remainsValid = remainsValid;
-		} else {
-			validFilesHash = actualFilesHash;
-			Main.remainsValid = true;
-		}
-	}
-*/
 
-	/*
-	private static  boolean compareList(ArrayList<byte[]> validFilesHash,
-										ArrayList<byte[]> actualFilesHash) {
+	private boolean checkFileInfo(FileInfo info) {
 
-		if (validFilesHash.size() == actualFilesHash.size()) {
-			for (byte[] afh : actualFilesHash) {
-				if (!validFilesHash.contains(afh)) {
-					return false;
-				}
-			}
-		}
+		FileInfo infoBd = this.validFilesInfo.get(info.getFilename());
+		if(infoBd==null)
+			return false;
+
+		if(infoBd.equals(info))
+			return true;
+
+		// Check Permissions
+
+		// File Modified and canWrite=False
+		if(info.canWrite==false && info.getLastModified()!=infoBd.getLastModified())
+			return false; // Alert !!!
+		// File Modified and canWrite=True
+		else if(info.canWrite==true && info.getLastModified()!=infoBd.getLastModified())
+			return true;
 		else
 			return false;
-		return true;
+
+
+
 	}
-*/
+
+
+	public FileInfo getInfo(String filename){
+		File f = new File(filename);Random rm;
+		if(f==null)
+			return null;
+		byte[] array = null;
+		try {
+			array = createChecksum(filename);
+		}catch (Exception e){
+			System.out.println("Error while creating File's Checksum -> "+filename);
+		}
+
+		FileInfo fi = new FileInfo(filename,array,f.canRead(),f.canWrite(),f.canExecute(),f.lastModified());
+		return fi;
+	}
 
 	public boolean mapsAreEqual(HashMap<String, byte []> mapA, HashMap<String, byte []> mapB) {
 
@@ -120,25 +117,9 @@ public class Worker implements Runnable {
 		return true;
 	}
 
-	private static byte[] calculateHash(String filename) {
-		MessageDigest md = null;
-
-		try (InputStream is = Files.newInputStream(Paths.get(filename))) {
-			md = MessageDigest.getInstance("MD5");
-			DigestInputStream dis = new DigestInputStream(is, md);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e1) {
-			e1.printStackTrace();
-		}
-		byte[] digest = md.digest();
-		return digest;
-
-	}
 
 	public static byte[] createChecksum(String filename) throws Exception {
 		InputStream fis =  new FileInputStream(filename);
-
 		byte[] buffer = new byte[1024];
 		MessageDigest complete = MessageDigest.getInstance("MD5");
 		int numRead;
@@ -169,4 +150,16 @@ public class Worker implements Runnable {
 		}
 	}
 
+	public void saveMaps(){
+		// Replace existing Data for this path
+		Main.validPathsInfo.put(path, validFilesInfo);
+	}
+
+	public void saveFileInfo(FileInfo fi){
+		// Replace existing Data for this path
+		HashMap<String,FileInfo> map = Main.validPathsInfo.get(path);
+		if(map==null)
+			Main.validPathsInfo.put(path, new HashMap<>());
+		Main.validPathsInfo.get(path).put(fi.getFilename(), fi);
+	}
 }

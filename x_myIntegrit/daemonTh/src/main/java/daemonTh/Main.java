@@ -14,10 +14,9 @@ import sun.misc.SignalHandler;
 public class Main {
 
 	public static boolean remainsValid;
-	static HashMap<String,byte[]> validFilesHash = null;
+	static HashMap<String,HashMap<String,FileInfo>> validPathsInfo = null;
 	static protected boolean shutdownRequested = false;
 	static Worker wk =null;
-	static String path="";
 	static public void shutdown()
 	{
 		shutdownRequested = true;
@@ -30,6 +29,7 @@ public class Main {
 		{
 			System.out.println("Interrupted which waiting on main daemon thread to complete.");
 		}
+		System.out.println("Shutting Down!");
 	}
 
 	static public boolean isShutdownRequested()
@@ -68,39 +68,47 @@ public class Main {
 
 		System.out.println("[myIntegrit] Started");
 
+		loadData();
 		daemonize();
-
+		addDaemonShutdownHook();
 		while(!isShutdownRequested())
 		{
-			try {
-				Thread.sleep(2000);
 
-				Worker wk = new Worker(validFilesHash, path);
-				Thread t1 = new Thread(wk,"t1");
-				t1.start();
+			for (String path : validPathsInfo.keySet()) {
+				try {
+					Thread.sleep(2000);
 
-					try{
+					Worker wk = new Worker(path, validPathsInfo.get(path), true);
+					Thread t1 = new Thread(wk, "t1");
+					t1.start();
+
+					try {
 						System.out.println("Waiting for thread to complete...");
 						t1.join();
-					}catch(InterruptedException e){
+					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 
-					System.out.println("DONE, State:"+remainsValid);
+					System.out.println("DONE, State:" + remainsValid);
 
 
+					if (!remainsValid) {
+						System.out.println("[System] Stoping");
+					}
 
-				if (!remainsValid) {
-					System.out.println("[System] Stoping");
+				}catch(InterruptedException e){
+					e.printStackTrace();
 				}
-
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				System.out.print('.');
 			}
-			System.out.print('.');
 		}
 
 
+	}
+
+	// Load from somewhere
+	private static void loadData() {
+		validPathsInfo = new HashMap<>();
 	}
 
 	static protected void addDaemonShutdownHook() {
@@ -109,10 +117,10 @@ public class Main {
 
 	static public void daemonize(){
 
-		String pidfile=System.getProperty("daemon.pidfile");
-		//String pidfile="C:/Fraps/pidfile.txt";
-		String conffile=System.getProperty("daemon.conf");
-		//String conffile="C:/Fraps/myintegrit.conf";
+		//String pidfile=System.getProperty("daemon.pidfile");
+		String pidfile="C:/Fraps/pidfile.txt";
+		//String conffile=System.getProperty("daemon.conf");
+		String conffile="C:/Fraps/myintegrit.conf";
 		File f = new File(pidfile);f.deleteOnExit();
 		File c = new File(conffile);
 
@@ -124,7 +132,13 @@ public class Main {
 			BufferedReader br = new BufferedReader(isr);
 			String line;
 			while ((line = br.readLine()) != null) {
-				path = line;
+				// For every path
+				//path = line;
+
+				// New Entry
+				HashMap<String, FileInfo> map = new HashMap<>();
+				validPathsInfo.put(line, map);
+				System.out.println("Path=" + line);
 			}
 
 		} catch (FileNotFoundException e) {
@@ -135,7 +149,6 @@ public class Main {
 
 
 		System.out.println("Config="+conffile);
-		System.out.println("Config path="+path);
 		System.out.println("Pid file=" + pidfile);
 
 
