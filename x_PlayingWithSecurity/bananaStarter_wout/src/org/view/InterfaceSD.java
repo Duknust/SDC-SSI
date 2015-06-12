@@ -14,11 +14,11 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
-import org.client.Main;
-import org.classes.Project;
-import org.services.ClientHandler;
-import org.types.Message;
-import org.types.requests.ReqAddEuros;
+import org.bsl.client.Main;
+import org.bsl.classes.Project;
+import org.bsl.services.ClientHandler;
+import org.bsl.types.Message;
+import org.bsl.types.requests.ReqAddEuros;
 
 public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runnable */ {
 

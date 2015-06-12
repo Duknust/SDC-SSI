@@ -2,6 +2,19 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/dao/UserDAO.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/dao/connection/MongoConnection.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/dao/ProjectDAO.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/client/Main.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/services/ClientHandler.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/dao/GenericDAO.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/services/Server.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/dao/connection/GenericConnection.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/types/TypeOP.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/dao/exceptions/GenericDAOException.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/classes/OosUser.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/security/diffieHellman/Client.java</file>
+        </group>
     </open-files>
 </project-private>

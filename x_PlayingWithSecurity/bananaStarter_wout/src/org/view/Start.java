@@ -11,12 +11,12 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import org.client.Main;
-import org.classes.User;
-import org.services.ClientHandler;
-import org.types.Message;
-import org.types.requests.ReqLogin;
-import org.types.requests.ReqRegister;
+import org.bsl.client.Main;
+import org.bsl.classes.User;
+import org.bsl.services.ClientHandler;
+import org.bsl.types.Message;
+import org.bsl.types.requests.ReqLogin;
+import org.bsl.types.requests.ReqRegister;
 
 public class Start extends javax.swing.JFrame {
 
