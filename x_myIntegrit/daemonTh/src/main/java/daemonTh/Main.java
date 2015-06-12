@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -14,13 +16,16 @@ import sun.misc.SignalHandler;
 public class Main {
 
 	public static boolean remainsValid;
-	static HashMap<String,HashMap<String,FileInfo>> validPathsInfo = null;
+	static HashMap<String,PathInfo> validPathsInfo = null;
 	static protected boolean shutdownRequested = false;
 	static Worker wk =null;
+	static HashMap<String,Thread> pathThread = null;
+	static boolean inter = false;
+
 	static public void shutdown()
 	{
 		shutdownRequested = true;
-
+/*
 		try
 		{
 			wk.wait();
@@ -28,8 +33,12 @@ public class Main {
 		catch(InterruptedException e)
 		{
 			System.out.println("Interrupted which waiting on main daemon thread to complete.");
-		}
-		System.out.println("Shutting Down!");
+		}*/
+		System.out.println("[SYSTEM] Stoping Threads");
+		for(Thread t : pathThread.values())
+			if(t.isAlive())
+				t.interrupt();
+		System.out.println("[SYSTEM] Threads Stopped");
 	}
 
 	static public boolean isShutdownRequested()
@@ -43,7 +52,12 @@ public class Main {
 			@Override
 			public void handle(Signal sig) {
 
-				System.out.println("[System] Stoping");
+				System.out.println("{SYSTEM] MAIN TERM");
+				System.out.println("[SYSTEM] Stoping Threads");
+				for(Thread t : pathThread.values())
+					if(t.isAlive())
+						t.interrupt();
+				System.out.println("[SYSTEM] Threads Stopped");
 			}
 		});
 /*
@@ -71,30 +85,34 @@ public class Main {
 		loadData();
 		daemonize();
 		addDaemonShutdownHook();
+		pathThread = new HashMap<>();
 		while(!isShutdownRequested())
 		{
-
+			System.out.println("");
 			for (String path : validPathsInfo.keySet()) {
 				try {
-					Thread.sleep(2000);
+					Thread.sleep(500);
+					Thread t1;
+					t1 = pathThread.get(path);
+					if(t1==null) {
 
-					Worker wk = new Worker(path, validPathsInfo.get(path), true);
-					Thread t1 = new Thread(wk, "t1");
-					t1.start();
-
-					try {
-						System.out.println("Waiting for thread to complete...");
-						t1.join();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+						Worker wk = new Worker(validPathsInfo.get(path), true,inter);
+						t1 = new Thread(wk, "t1");
+						pathThread.put(path, t1);
+						//t1.setDaemon(true);
+						t1.start();
+					}
+					else if(t1.isAlive()==false){
+						Worker wk = new Worker(validPathsInfo.get(path), true,inter);
+						t1 = new Thread(wk, "t1");
+						pathThread.put(path, t1);
+						//t1.setDaemon(true);
+						t1.start();
 					}
 
-					System.out.println("DONE, State:" + remainsValid);
 
+						//System.out.println("DONE, State:" + remainsValid);
 
-					if (!remainsValid) {
-						System.out.println("[System] Stoping");
-					}
 
 				}catch(InterruptedException e){
 					e.printStackTrace();
@@ -102,6 +120,8 @@ public class Main {
 				System.out.print('.');
 			}
 		}
+		System.out.println("[SYSTEM] Shutting Down");
+		shutdown();
 
 
 	}
@@ -117,10 +137,22 @@ public class Main {
 
 	static public void daemonize(){
 
-		//String pidfile=System.getProperty("daemon.pidfile");
-		String pidfile="C:/Fraps/pidfile.txt";
-		//String conffile=System.getProperty("daemon.conf");
-		String conffile="C:/Fraps/myintegrit.conf";
+		String pidfile=System.getProperty("daemon.pidfile");
+		//String pidfile="C:/Fraps/pidfile.txt";
+		String conffile=System.getProperty("daemon.conf");
+		//String conffile="C:/Fraps/myintegrit.conf";
+
+		String interactive=System.getProperty("daemon.interactive");
+
+		int interi = 0;
+		try {
+		interi = Integer.parseInt(interactive);}
+		catch (NumberFormatException nfe){
+			;
+		}
+		inter = interi!=0;
+
+
 		File f = new File(pidfile);f.deleteOnExit();
 		File c = new File(conffile);
 
@@ -131,14 +163,33 @@ public class Main {
 			InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
 			BufferedReader br = new BufferedReader(isr);
 			String line;
+			Pattern p = Pattern.compile("(\\d+) (.+)");
 			while ((line = br.readLine()) != null) {
 				// For every path
 				//path = line;
 
-				// New Entry
-				HashMap<String, FileInfo> map = new HashMap<>();
-				validPathsInfo.put(line, map);
-				System.out.println("Path=" + line);
+				int ms = -1;
+				File fi = null;
+				String path = "",msecs="";
+				Matcher m = p.matcher(line);
+				if (m.matches())
+				{
+					msecs = m.group(1);
+					try{ms = Integer.parseInt(msecs);}
+					catch (NumberFormatException exp){
+						;
+					}
+					path = m.group(2);
+					// New Entry
+					HashMap<String, FileInfo> map = new HashMap<>();
+					fi = new File(path);}
+
+				if(fi!=null && ms > 0)
+					{PathInfo pi = new PathInfo(path,new HashMap<>(),ms*1000);
+					 validPathsInfo.put(path, pi);
+					 System.out.println("[PATH] ADDED   -> "+ msecs +"s "+ path);}
+				else
+					 System.out.println("[PATH] INVALID -> "+ line);
 			}
 
 		} catch (FileNotFoundException e) {

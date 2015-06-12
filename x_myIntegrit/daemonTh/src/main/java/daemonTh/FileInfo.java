@@ -1,16 +1,21 @@
 package daemonTh;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * Created by MrFabio on 11/06/2015.
  */
-public class FileInfo {
+public class FileInfo implements Serializable{
 
-    byte[] fileHash;
-    boolean canRead,canWrite,canExecute,valid;
-    String filename;
-    long lastModified;
+    public enum State{
+        OK,DELETED,NEW,UPDATED
+    }
+    private byte[] fileHash;
+    private boolean canRead,canWrite,canExecute,valid,signaled;
+    private String filename;
+    private long lastModified;
+    private State state;
 
     FileInfo(){
         fileHash = new byte[16];
@@ -19,9 +24,11 @@ public class FileInfo {
         canExecute = false;
         filename="";
         lastModified = 0;
+        state = State.OK;
+        signaled=false;
     }
 
-    FileInfo(String filename,boolean canRead,boolean canWrite,boolean canExecute,boolean valid,long lastModified){
+    FileInfo(String filename,boolean canRead,boolean canWrite,boolean canExecute,boolean valid,long lastModified,State state,boolean signaled){
         this.filename=filename;
         fileHash = new byte[16];
         this.canRead = canRead;
@@ -29,9 +36,11 @@ public class FileInfo {
         this.canExecute = canExecute;
         this.valid = valid;
         this.lastModified = lastModified;
+        this.state = state;
+        this.signaled = signaled;
     }
 
-    FileInfo(String filename,byte[] hash,boolean canRead,boolean canWrite,boolean canExecute,long lastModified){
+    FileInfo(String filename,byte[] hash,boolean canRead,boolean canWrite,boolean canExecute,long lastModified,State state,boolean signaled){
         this.filename=filename;
         fileHash = hash;
         this.canRead = canRead;
@@ -39,10 +48,12 @@ public class FileInfo {
         this.canExecute = canExecute;
         this.valid = false;
         this.lastModified = lastModified;
+        this.state = state;
+        this.signaled = signaled;
     }
 
 
-    FileInfo(String filename,byte[] hash,boolean canRead,boolean canWrite,boolean canExecute,boolean valid,long lastModified){
+    FileInfo(String filename,byte[] hash,boolean canRead,boolean canWrite,boolean canExecute,boolean valid,long lastModified,State state,boolean signaled){
         this.filename=filename;
         fileHash = hash;
         this.canRead = canRead;
@@ -50,6 +61,8 @@ public class FileInfo {
         this.canExecute = canExecute;
         this.valid = valid;
         this.lastModified = lastModified;
+        this.state = state;
+        this.signaled = signaled;
     }
 
     public byte[] getFileHash() {
@@ -60,7 +73,7 @@ public class FileInfo {
         this.fileHash = fileHash;
     }
 
-    public boolean isCanRead() {
+    public boolean CanRead() {
         return canRead;
     }
 
@@ -68,7 +81,7 @@ public class FileInfo {
         this.canRead = canRead;
     }
 
-    public boolean isCanWrite() {
+    public boolean CanWrite() {
         return canWrite;
     }
 
@@ -76,7 +89,7 @@ public class FileInfo {
         this.canWrite = canWrite;
     }
 
-    public boolean isCanExecute() {
+    public boolean CanExecute() {
         return canExecute;
     }
 
@@ -106,6 +119,22 @@ public class FileInfo {
 
     public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    public boolean isSignaled() {
+        return signaled;
+    }
+
+    public void setSignaled(boolean signaled) {
+        this.signaled = signaled;
     }
 
     @Override
