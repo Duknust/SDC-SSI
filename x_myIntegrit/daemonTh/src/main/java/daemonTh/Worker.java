@@ -128,7 +128,7 @@ public class Worker implements Runnable {
 
 			}
 
-			System.out.println("\n"+this.pathInfo.getValidFilesInfo().size() + " " + this.pathInfo.toString()+"\n\n");
+			//System.out.println("\n"+this.pathInfo.getValidFilesInfo().size() + " " + this.pathInfo.toString()+"\n\n");
 			if(firstStart)
 				firstStart=false;
 			try {

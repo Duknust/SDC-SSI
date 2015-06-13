@@ -8,9 +8,9 @@ import java.util.HashMap;
  */
 public class PathInfo implements Serializable{
 
-    String path;
-    HashMap<String,FileInfo> validFilesInfo;
-    int checkSeconds;
+    private String path;
+    private HashMap<String,FileInfo> validFilesInfo;
+    private int checkSeconds;
 
     public PathInfo(String path, HashMap<String, FileInfo> validFilesInfo, int checkSeconds) {
         this.path = path;
