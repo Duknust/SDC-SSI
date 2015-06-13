@@ -11,7 +11,7 @@ import sun.misc.SignalHandler;
 
 public class Main {
 
-	public static boolean remainsValid;
+	static boolean remainsValid;
 	static HashMap<String,PathInfo> validPathsInfo = null;
 	static protected boolean shutdownRequested = false;
 	static Worker wk =null;
