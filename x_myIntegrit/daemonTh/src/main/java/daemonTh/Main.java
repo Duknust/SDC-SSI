@@ -2,11 +2,7 @@ package daemonTh;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,8 +16,8 @@ public class Main {
 	static protected boolean shutdownRequested = false;
 	static Worker wk =null;
 	static HashMap<String,Thread> pathThread = null;
-	static boolean inter = false,goReload=false,pauseResume=false;
-	static String pidfile, conffile;
+	static boolean inter = false,goReload=false,pauseResume=false,validfileOK=false;
+	static String pidfile, conffile, validfile,savefile;
 
 	static public void shutdown()
 	{
@@ -40,6 +36,12 @@ public class Main {
 			if(t.isAlive())
 				t.interrupt();
 		System.out.println("[SYSTEM] Threads Stopped");
+		if(saveData(validPathsInfo,savefile)==false)
+			System.out.println("[SYSTEM] Save Failed");
+		else
+			System.out.println("[SYSTEM] Save OK");
+		System.out.println("TOTAL VALIDOS:"+validPathsInfo.size());
+		System.out.println("[myIntegrit] Ended");
 	}
 
 	static public boolean isShutdownRequested()
@@ -55,10 +57,12 @@ public class Main {
 
 				System.out.println("{SYSTEM] MAIN INTERRUPT");
 				System.out.println("[SYSTEM] Stopping Threads");
-				for(Thread t : pathThread.values())
-					if(t.isAlive())
+				shutdownRequested = true;
+				for (Thread t : pathThread.values())
+					if (t.isAlive())
 						t.interrupt();
-				System.out.println("[SYSTEM] Threads Stopped");
+
+
 			}
 		});
 
@@ -71,39 +75,31 @@ public class Main {
 				//Save
 				//saveMaps();
 
-				if(Main.pauseResume==false)
-					{pauseResume=true;System.out.println("{SYSTEM] Pausing");}
-				else
-					{pauseResume=false;System.out.println("{SYSTEM] Resuming");}
+				if (Main.pauseResume == false) {
+					pauseResume = true;
+					System.out.println("{[SYSTEM] Pausing");
+				} else {
+					pauseResume = false;
+					System.out.println("[SYSTEM] Resuming");
+				}
 
 				//pauseResume();
 				return;
 			}
 		});
-/*
-		Signal.handle(new Signal("HUP"), new SignalHandler() {
-			@Override
-			public void handle(Signal sig) {
-
-				System.out.println("[System] Reloading configuration files");
-			}
-		});*/
-/*
-		try
-		{
-			// do sanity checks and startup actions
-			daemonize();
-		}
-		catch (Throwable e)
-		{
-			System.err.println("Startup failed.");
-			e.printStackTrace();
-		}*/
 
 		System.out.println("[myIntegrit] Started");
 
-		loadData();
 		daemonize();
+		if(loadData()==false)
+			{System.out.println("[SYSTEM] Valid File Load Failed");
+			 validfileOK=false;
+			 System.out.println("[SYSTEM] Loading Configuration File");
+			 loadConf();}
+		else
+			{System.out.println("[SYSTEM] Valid File Load OK");
+			 validfileOK=true;}
+
 		addDaemonShutdownHook();
 		pathThread = new HashMap<>();
 
@@ -122,14 +118,14 @@ public class Main {
 						t1 = pathThread.get(path);
 						if(t1==null) {
 
-							Worker wk = new Worker(validPathsInfo.get(path), true,inter);
+							Worker wk = new Worker(validPathsInfo.get(path), validfileOK,inter);
 							t1 = new Thread(wk, "t1");
 							pathThread.put(path, t1);
 							//t1.setDaemon(true);
 							t1.start();
 						}
 						else if(t1.isAlive()==false){
-							Worker wk = new Worker(validPathsInfo.get(path), true,inter);
+							Worker wk = new Worker(validPathsInfo.get(path), validfileOK,inter);
 							t1 = new Thread(wk, "t1");
 							pathThread.put(path, t1);
 							//t1.setDaemon(true);
@@ -147,9 +143,52 @@ public class Main {
 
 	}
 
-	// Load from somewhere
-	private static void loadData() {
-		validPathsInfo = new HashMap<>();
+	// Load Data from File
+	private static boolean loadData() {
+		FileInputStream fin = null;
+		File fi = new File(validfile);
+		HashMap<String,PathInfo> map=null;
+		try {
+			if(fi.exists()==false)
+			fi.createNewFile();
+			fin = new FileInputStream(fi);
+			ObjectInputStream ois = new ObjectInputStream(fin);
+			map = (HashMap) ois.readObject();
+			fin.close();
+		} catch (FileNotFoundException ex) {
+			validPathsInfo = new HashMap<String,PathInfo>();
+			return false;
+		} catch (IOException | ClassNotFoundException ex) {
+			validPathsInfo = new HashMap<String,PathInfo>();
+			return false;
+		}
+
+
+		if(map==null)
+			validPathsInfo = new HashMap<String,PathInfo>();
+		else
+			validPathsInfo = map;
+
+		return true;
+	}
+
+	// Save Data to File
+	private static boolean saveData(Object data,String file) {
+		FileOutputStream fout = null;
+		File fi = new File(file);
+		try {
+			if(fi.exists()==false)
+				fi.createNewFile();
+			fout = new FileOutputStream(fi);
+			ObjectOutputStream oos = new ObjectOutputStream(fout);
+			oos.writeObject(data);
+			fout.flush();
+			fout.close();
+		} catch (Exception ex) {
+			//ex.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 
 	static protected void addDaemonShutdownHook() {
@@ -159,13 +198,28 @@ public class Main {
 	static public void daemonize(){
 
 		pidfile=System.getProperty("daemon.pidfile");
-		//String pidfile="C:/Fraps/pidfile.txt";
+		//pidfile="C:/Fraps/pidfile.txt";
+		if(pidfile==null)
+			pidfile = "~/pidfile.txt";
+
 		conffile=System.getProperty("daemon.conf");
-		//String conffile="C:/Fraps/myintegrit.conf";
+		//conffile="C:/Fraps/myintegrit.conf";
+		if(conffile==null)
+			conffile = "~/myintegrit.conf";
+
+		savefile=System.getProperty("daemon.savefile");
+		//savefile="C:/Fraps/myIsave.data";
+		if(savefile==null)
+			savefile = "~myIsave.data";
+
+		validfile=System.getProperty("daemon.validfile");
+		//validfile="C:/Fraps/myIvalid.data";
+		if(validfile==null)
+			validfile = "~/myIvalid.data";
 
 		String interactive=System.getProperty("daemon.interactive");
 
-		int interi = 0;
+		int interi = 1;
 		try {
 		interi = Integer.parseInt(interactive);}
 		catch (NumberFormatException nfe){
@@ -175,10 +229,13 @@ public class Main {
 
 
 		File f = new File(pidfile);f.deleteOnExit();
-		loadConf();
 
-		//System.out.close();
-		//System.err.close();
+
+
+		System.out.println("Config     = " + conffile);
+		System.out.println("Pid File   = " + pidfile);
+		System.out.println("Valid File = " + validfile);
+		System.out.println("Save File  = " + savefile);
 	}
 
 	public static void pauseResume(){
@@ -258,9 +315,6 @@ public class Main {
 			e.printStackTrace();
 		}
 
-
-		System.out.println("Config="+conffile);
-		System.out.println("Pid file=" + pidfile);
 
 	}
 }

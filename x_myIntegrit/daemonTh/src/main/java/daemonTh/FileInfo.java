@@ -12,7 +12,7 @@ public class FileInfo implements Serializable{
         OK,DELETED,NEW,UPDATED
     }
     private byte[] fileHash;
-    private boolean canRead,canWrite,canExecute,valid,signaled;
+    private boolean canRead,canWrite,canExecute,valid,signaled, directory;
     private String filename;
     private long lastModified;
     private State state;
@@ -28,7 +28,7 @@ public class FileInfo implements Serializable{
         signaled=false;
     }
 
-    FileInfo(String filename,boolean canRead,boolean canWrite,boolean canExecute,boolean valid,long lastModified,State state,boolean signaled){
+    FileInfo(String filename,boolean canRead,boolean canWrite,boolean canExecute,boolean valid,long lastModified,State state,boolean signaled,boolean directory){
         this.filename=filename;
         fileHash = new byte[16];
         this.canRead = canRead;
@@ -38,9 +38,10 @@ public class FileInfo implements Serializable{
         this.lastModified = lastModified;
         this.state = state;
         this.signaled = signaled;
+        this.directory = directory;
     }
 
-    FileInfo(String filename,byte[] hash,boolean canRead,boolean canWrite,boolean canExecute,long lastModified,State state,boolean signaled){
+    FileInfo(String filename,byte[] hash,boolean canRead,boolean canWrite,boolean canExecute,long lastModified,State state,boolean signaled,boolean directory){
         this.filename=filename;
         fileHash = hash;
         this.canRead = canRead;
@@ -50,10 +51,11 @@ public class FileInfo implements Serializable{
         this.lastModified = lastModified;
         this.state = state;
         this.signaled = signaled;
+        this.directory = directory;
     }
 
 
-    FileInfo(String filename,byte[] hash,boolean canRead,boolean canWrite,boolean canExecute,boolean valid,long lastModified,State state,boolean signaled){
+    FileInfo(String filename,byte[] hash,boolean canRead,boolean canWrite,boolean canExecute,boolean valid,long lastModified,State state,boolean signaled,boolean directory){
         this.filename=filename;
         fileHash = hash;
         this.canRead = canRead;
@@ -63,6 +65,7 @@ public class FileInfo implements Serializable{
         this.lastModified = lastModified;
         this.state = state;
         this.signaled = signaled;
+        this.directory = directory;
     }
 
     public byte[] getFileHash() {
@@ -137,6 +140,14 @@ public class FileInfo implements Serializable{
         this.signaled = signaled;
     }
 
+    public boolean isDirectory() {
+        return directory;
+    }
+
+    public void setDirectory(boolean directory) {
+        this.directory = directory;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -174,7 +185,11 @@ public class FileInfo implements Serializable{
                 ", canWrite=" + canWrite +
                 ", canExecute=" + canExecute +
                 ", valid=" + valid +
+                ", signaled=" + signaled +
+                ", directory=" + directory +
                 ", filename='" + filename + '\'' +
+                ", lastModified=" + lastModified +
+                ", state=" + state +
                 '}';
     }
 }

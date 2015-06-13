@@ -32,7 +32,7 @@ public class Worker implements Runnable {
 	public Worker(PathInfo pi,boolean firstStart,boolean printS) {
 		actualFilesInfo = new HashMap<>();
 		this.pathInfo = pi;
-		this.firstStart = firstStart;
+		this.firstStart = !firstStart;
 		this.printS = printS;
 	}
 
@@ -40,7 +40,7 @@ public class Worker implements Runnable {
 	public void run() {
 
 		System.out.println("[THREAD] Started - " + pathInfo.getPath());
-
+/*
 		// SIGTERM
 		Signal.handle(new Signal("TERM"), new SignalHandler() {
 			@Override
@@ -54,6 +54,8 @@ public class Worker implements Runnable {
 				return;
 			}
 		});
+*/
+
 
 		//SIGUSR1 - Reload Config File
 		Signal.handle(new Signal("USR2"), new SignalHandler() {
@@ -68,6 +70,8 @@ public class Worker implements Runnable {
 				return;
 			}
 		});
+
+
 /*
 
 		//SIGTRAP - Pause/Resume
@@ -91,6 +95,7 @@ public class Worker implements Runnable {
 		while(valid) {
 			//path = "C:/Fraps/";
 			remainsValid = true;
+
 			listAllFiles(pathInfo.getPath(), allFiles);
 			for (String filename : allFiles) {
 				//byte[] newHash = new byte[1024];
@@ -98,7 +103,8 @@ public class Worker implements Runnable {
 					//newHash = createChecksum(filename);
 					FileInfo info = getInfo(filename);
 					if(firstStart)
-						saveFileInfo(info);
+					{
+						System.out.println("first");saveFileInfo(info);}
 					boolean ok = checkFileInfo(info);
 					if(ok==false){
 						remainsValid = false;
@@ -110,16 +116,19 @@ public class Worker implements Runnable {
 					e.printStackTrace();
 				}
 			}
+			if(remainsValid)
+				saveMaps();
 
 			if(printS)
 			{	printStats(actualFilesInfo);
 				if(remainsValid)
-					System.out.println("State:"+ANSI_CYAN + " VALID - " + ANSI_RESET +pathInfo.getPath()+"\n\n");
+					System.out.println("State:"+ANSI_CYAN + " VALID" + ANSI_RESET+"\n\n");
 				else
-					System.out.println("State:"+ANSI_PURPLE + " NOT VALID - " + ANSI_RESET +pathInfo.getPath()+"\n\n");
+					System.out.println("State:"+ANSI_PURPLE + " NOT VALID" + ANSI_RESET +"\n\n");
 
 			}
 
+			System.out.println("\n"+this.pathInfo.getValidFilesInfo().size() + " " + this.pathInfo.toString()+"\n\n");
 			if(firstStart)
 				firstStart=false;
 			try {
@@ -135,16 +144,37 @@ public class Worker implements Runnable {
 
 		FileInfo infoBd = this.pathInfo.getValidFilesInfo().get(info.getFilename());
 
+
+
 		File finfo = new File(info.getFilename());
 		File fpai = finfo.getParentFile();
-		boolean folder = fpai.isDirectory(),cw=fpai.canWrite(),cr=fpai.canRead(),ce=fpai.canExecute();
+
+
+
+		FileInfo fipai = pathInfo.getValidFilesInfo().get(fpai.getAbsolutePath());
+		System.out.println("eu="+info.getFilename()+"  fpai="+fpai.getAbsolutePath());
+		if(fipai==null)
+			return true;
+
+		boolean folder = fipai.isDirectory(),
+				cw=fipai.CanWrite(),
+				cr=fipai.CanRead(),
+				ce=fipai.CanExecute();
+
+		System.out.println("PAI " + cr + "_"+cw + "_"+ce + "_" + "infoBD="+infoBd);
 
 		if(infoBd==null){
+
 			info.setState(FileInfo.State.NEW);
-			if(finfo.getParentFile().canWrite() == false)// Parent Folder canWrite=false and A new File Appeared
+			System.out.println("NEW " + cr + "_"+cw + "_"+ce + "_" );
+			if(fipai.CanWrite() == false)// Parent Folder canWrite=false and a new File Appeared
 				return false;
 
 			return true;}
+
+
+		if(infoBd.isDirectory())
+			return true;
 
 		if(infoBd.equals(info))
 			return true;
@@ -154,10 +184,10 @@ public class Worker implements Runnable {
 		if(info.CanWrite()==false && info.getLastModified()!=infoBd.getLastModified())// File Modified and canWrite=False
 			return false; // Alert !!!
 
-		else if(finfo.getParentFile().canWrite() == false && info.getLastModified()!=infoBd.getLastModified())// Parent Folder canWrite=false and A new File Appeared
+		else if(fipai.CanWrite() == false && info.getLastModified()!=infoBd.getLastModified())// Parent Folder canWrite=false and A new File Appeared
 			return false;
 
-		else if(info.CanWrite()==true && finfo.getParentFile().canWrite() == true && info.getLastModified()!=infoBd.getLastModified())// File Modified and canWrite=True
+		else if(info.CanWrite()==true && fipai.CanWrite() == true && info.getLastModified()!=infoBd.getLastModified())// File Modified and canWrite=True
 			{ info.setState(FileInfo.State.UPDATED);
 			  return true;}
 
@@ -172,16 +202,20 @@ public class Worker implements Runnable {
 		if(f==null)
 			return null;
 		byte[] array = null;
-		if(f.exists())
-			try {
-				array = createChecksum(filename);
-				state = FileInfo.State.OK;
-			}catch (Exception e){
-				System.out.println("Error while creating File's Checksum -> "+filename);
-			}
+		boolean isDir = false;
+		if(f.exists()) {
+			isDir = f.isDirectory();
+			if(isDir==false)
+				{try {
+					array = createChecksum(filename);
+					} catch (Exception e) {
+						System.out.println("Error while creating File's Checksum -> " + filename);
+					}
+				}
+		}
 		else
 			state = FileInfo.State.DELETED;
-		FileInfo fi = new FileInfo(filename,array,f.canRead(),f.canWrite(),f.canExecute(),f.lastModified(),state,false);
+		FileInfo fi = new FileInfo(filename,array,f.canRead(),f.canWrite(),f.canExecute(),f.lastModified(),state,false,isDir);
 		return fi;
 	}
 
@@ -229,8 +263,9 @@ public class Worker implements Runnable {
 		File[] listOfFiles = folder.listFiles();
 		if(listOfFiles!=null)
 			for (int i = 0; i < listOfFiles.length; i++) {
+				result.add(listOfFiles[i].getAbsolutePath());
 				if (listOfFiles[i].isFile()) {
-					result.add(listOfFiles[i].getAbsolutePath());
+					//result.add(listOfFiles[i].getAbsolutePath());
 					//System.out.println("File " + listOfFiles[i].getName());
 				} else if (listOfFiles[i].isDirectory()) {
 					listAllFiles(listOfFiles[i].getAbsolutePath(), result);
@@ -241,7 +276,9 @@ public class Worker implements Runnable {
 
 	public void saveMaps(){
 		// Replace existing Data for this path
-		Main.validPathsInfo.put(pathInfo.getPath(), pathInfo);
+		//Main.validPathsInfo.put(pathInfo.getPath(), pathInfo);
+		Main.validPathsInfo.put(pathInfo.getPath(),pathInfo);
+		System.out.println("SAVING "+pathInfo.getPath()+":"+pathInfo.getValidFilesInfo().size());
 	}
 
 	public void saveFileInfo(FileInfo fi){
@@ -251,7 +288,7 @@ public class Worker implements Runnable {
 			Main.validPathsInfo.put(path, new HashMap<>());
 		Main.validPathsInfo.get(path).put(fi.getFilename(), fi);*/
 
-		this.pathInfo.getValidFilesInfo().put(fi.getFilename(), fi);
+		this.pathInfo.putValidFileInfo(fi.getFilename(), fi);
 	}
 
 	public void printStats(HashMap<String,FileInfo> map){
@@ -260,9 +297,9 @@ public class Worker implements Runnable {
 		System.out.println("\nPATH = " + pathInfo.getPath());
 		for(FileInfo info : map.values()) {
 			if(info.isValid())
-				System.out.print(ANSI_GREEN + " [   VALID   ] " + ANSI_RESET);
+				System.out.print(ANSI_GREEN + " [   VALID   ] " + ANSI_RESET + info.CanRead() + "_" + info.CanWrite() + "_" + info.CanExecute());
 			else
-				System.out.print(ANSI_RED + " [ NOT VALID ] " + ANSI_RESET);
+				System.out.print(ANSI_RED + " [ NOT VALID ] " + ANSI_RESET + info.CanRead() + "_" + info.CanWrite() + "_" + info.CanExecute());
 
 			System.out.println(info.getFilename());
 			/*
