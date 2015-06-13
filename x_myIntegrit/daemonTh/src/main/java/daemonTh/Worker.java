@@ -41,11 +41,12 @@ public class Worker implements Runnable {
 
 		System.out.println("[THREAD] Started - " + pathInfo.getPath());
 
+		// SIGTERM
 		Signal.handle(new Signal("TERM"), new SignalHandler() {
 			@Override
 			public void handle(Signal sig) {
 
-				System.out.println("[THREAD] Stoping - " + pathInfo.getPath());
+				System.out.println("[THREAD] Stopping - " + pathInfo.getPath());
 				//Save
 				//saveMaps();
 				Main.shutdownRequested = true;
@@ -53,6 +54,38 @@ public class Worker implements Runnable {
 				return;
 			}
 		});
+
+		//SIGUSR1 - Reload Config File
+		Signal.handle(new Signal("USR2"), new SignalHandler() {
+			@Override
+			public void handle(Signal sig) {
+
+				System.out.println("[THREAD] Stopping - " + pathInfo.getPath());
+				//Save
+				//saveMaps();
+				Main.goReload = true;
+				//Main.shutdown();
+				return;
+			}
+		});
+/*
+
+		//SIGTRAP - Pause/Resume
+		Signal.handle(new Signal("TRAP"), new SignalHandler() {
+			@Override
+			public void handle(Signal sig) {
+
+				System.out.println("[THREAD] Pausing - " + pathInfo.getPath());
+				//Save
+				//saveMaps();
+
+				Main.pauseResume=true;
+				//Main.shutdown();
+
+				return;
+			}
+		});
+*/
 		boolean remainsValid = false;
 		HashSet<String> allFiles = new HashSet<>();
 		while(valid) {

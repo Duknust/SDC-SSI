@@ -20,7 +20,8 @@ public class Main {
 	static protected boolean shutdownRequested = false;
 	static Worker wk =null;
 	static HashMap<String,Thread> pathThread = null;
-	static boolean inter = false;
+	static boolean inter = false,goReload=false,pauseResume=false;
+	static String pidfile, conffile;
 
 	static public void shutdown()
 	{
@@ -52,12 +53,31 @@ public class Main {
 			@Override
 			public void handle(Signal sig) {
 
-				System.out.println("{SYSTEM] MAIN TERM");
-				System.out.println("[SYSTEM] Stoping Threads");
+				System.out.println("{SYSTEM] MAIN INTERRUPT");
+				System.out.println("[SYSTEM] Stopping Threads");
 				for(Thread t : pathThread.values())
 					if(t.isAlive())
 						t.interrupt();
 				System.out.println("[SYSTEM] Threads Stopped");
+			}
+		});
+
+
+		//SIGTRAP - Pause/Resume
+		Signal.handle(new Signal("TRAP"), new SignalHandler() {
+			@Override
+			public void handle(Signal sig) {
+
+				//Save
+				//saveMaps();
+
+				if(Main.pauseResume==false)
+					{pauseResume=true;System.out.println("{SYSTEM] Pausing");}
+				else
+					{pauseResume=false;System.out.println("{SYSTEM] Resuming");}
+
+				//pauseResume();
+				return;
 			}
 		});
 /*
@@ -86,39 +106,40 @@ public class Main {
 		daemonize();
 		addDaemonShutdownHook();
 		pathThread = new HashMap<>();
+
 		while(!isShutdownRequested())
 		{
 			System.out.println("");
-			for (String path : validPathsInfo.keySet()) {
-				try {
-					Thread.sleep(500);
-					Thread t1;
-					t1 = pathThread.get(path);
-					if(t1==null) {
+			if(goReload)
+				{reloadConf();goReload=false;}
+			else if(pauseResume)
+				pauseResume();
+			else
+				for (String path : validPathsInfo.keySet()) {
+					try {
+						Thread.sleep(500);
+						Thread t1;
+						t1 = pathThread.get(path);
+						if(t1==null) {
 
-						Worker wk = new Worker(validPathsInfo.get(path), true,inter);
-						t1 = new Thread(wk, "t1");
-						pathThread.put(path, t1);
-						//t1.setDaemon(true);
-						t1.start();
+							Worker wk = new Worker(validPathsInfo.get(path), true,inter);
+							t1 = new Thread(wk, "t1");
+							pathThread.put(path, t1);
+							//t1.setDaemon(true);
+							t1.start();
+						}
+						else if(t1.isAlive()==false){
+							Worker wk = new Worker(validPathsInfo.get(path), true,inter);
+							t1 = new Thread(wk, "t1");
+							pathThread.put(path, t1);
+							//t1.setDaemon(true);
+							t1.start();
+						}
+					}catch(InterruptedException e){
+						e.printStackTrace();
 					}
-					else if(t1.isAlive()==false){
-						Worker wk = new Worker(validPathsInfo.get(path), true,inter);
-						t1 = new Thread(wk, "t1");
-						pathThread.put(path, t1);
-						//t1.setDaemon(true);
-						t1.start();
-					}
-
-
-						//System.out.println("DONE, State:" + remainsValid);
-
-
-				}catch(InterruptedException e){
-					e.printStackTrace();
+					System.out.print('.');
 				}
-				System.out.print('.');
-			}
 		}
 		System.out.println("[SYSTEM] Shutting Down");
 		shutdown();
@@ -137,9 +158,9 @@ public class Main {
 
 	static public void daemonize(){
 
-		String pidfile=System.getProperty("daemon.pidfile");
+		pidfile=System.getProperty("daemon.pidfile");
 		//String pidfile="C:/Fraps/pidfile.txt";
-		String conffile=System.getProperty("daemon.conf");
+		conffile=System.getProperty("daemon.conf");
 		//String conffile="C:/Fraps/myintegrit.conf";
 
 		String interactive=System.getProperty("daemon.interactive");
@@ -154,6 +175,45 @@ public class Main {
 
 
 		File f = new File(pidfile);f.deleteOnExit();
+		loadConf();
+
+		//System.out.close();
+		//System.err.close();
+	}
+
+	public static void pauseResume(){
+
+		if(pauseResume==true) {
+			for (Thread t : pathThread.values())
+				if (t.isAlive())
+					t.interrupt();
+			pathThread.clear();
+			System.out.println("{SYSTEM] Paused");
+			while(pauseResume) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}else
+		{
+			System.out.println("[SYSTEM] Resumed");
+		}
+	}
+
+
+	public static void reloadConf(){
+
+		System.out.println("[SYSTEM] Config Reloaded");
+		for(Thread t:pathThread.values())
+			if(t.isAlive())
+				t.interrupt();
+
+		loadConf();
+	}
+
+	public static void loadConf(){
 		File c = new File(conffile);
 
 		InputStream fis = null;
@@ -185,11 +245,11 @@ public class Main {
 					fi = new File(path);}
 
 				if(fi!=null && ms > 0)
-					{PathInfo pi = new PathInfo(path,new HashMap<>(),ms*1000);
-					 validPathsInfo.put(path, pi);
-					 System.out.println("[PATH] ADDED   -> "+ msecs +"s "+ path);}
+				{PathInfo pi = new PathInfo(path,new HashMap<>(),ms*1000);
+					validPathsInfo.put(path, pi);
+					System.out.println("[PATH] ADDED   -> "+ msecs +"s "+ path);}
 				else
-					 System.out.println("[PATH] INVALID -> "+ line);
+					System.out.println("[PATH] INVALID -> "+ line);
 			}
 
 		} catch (FileNotFoundException e) {
@@ -202,8 +262,5 @@ public class Main {
 		System.out.println("Config="+conffile);
 		System.out.println("Pid file=" + pidfile);
 
-
-		//System.out.close();
-		//System.err.close();
 	}
 }
