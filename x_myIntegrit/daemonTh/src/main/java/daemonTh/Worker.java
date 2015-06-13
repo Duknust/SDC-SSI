@@ -23,11 +23,11 @@ public class Worker implements Runnable {
 	public static final String ANSI_CYAN = "\u001B[36m";
 	public static final String ANSI_WHITE = "\u001B[37m";
 
-	PathInfo pathInfo;
+	private PathInfo pathInfo;
 
-	HashMap<String,FileInfo> actualFilesInfo = null;
-	boolean valid = true,firstStart,printS=false;
-	long tStart = System.currentTimeMillis();
+	private HashMap<String,FileInfo> actualFilesInfo = null;
+	private boolean valid = true,firstStart,printS=false;
+	private long tStart = System.currentTimeMillis();
 
 	public Worker(PathInfo pi,boolean firstStart,boolean printS) {
 		actualFilesInfo = new HashMap<>();
