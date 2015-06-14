@@ -33,6 +33,6 @@
     
 ### Projects
 
-## Safety project
+**Safety project**
 
-## myIntegrit
+**myIntegrit**
