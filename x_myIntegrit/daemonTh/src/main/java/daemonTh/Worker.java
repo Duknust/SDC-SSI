@@ -7,9 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.Logger;
 
 public class Worker implements Runnable {
 
@@ -39,7 +37,7 @@ public class Worker implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.println("[THREAD] Started - " + pathInfo.getPath());
+		//System.out.println("[THREAD] Started - " + pathInfo.getPath());
 /*
 		// SIGTERM
 		Signal.handle(new Signal("TERM"), new SignalHandler() {
@@ -48,7 +46,7 @@ public class Worker implements Runnable {
 
 				System.out.println("[THREAD] Stopping - " + pathInfo.getPath());
 				//Save
-				//saveMaps();
+				//savePath();
 				Main.shutdownRequested = true;
 				//Main.shutdown();
 				return;
@@ -62,9 +60,8 @@ public class Worker implements Runnable {
 			@Override
 			public void handle(Signal sig) {
 
-				System.out.println("[THREAD] Stopping - " + pathInfo.getPath());
 				//Save
-				//saveMaps();
+				//savePath();
 				Main.goReload = true;
 				//Main.shutdown();
 				return;
@@ -81,7 +78,7 @@ public class Worker implements Runnable {
 
 				System.out.println("[THREAD] Pausing - " + pathInfo.getPath());
 				//Save
-				//saveMaps();
+				//savePath();
 
 				Main.pauseResume=true;
 				//Main.shutdown();
@@ -104,7 +101,7 @@ public class Worker implements Runnable {
 					FileInfo info = getInfo(filename);
 					if(firstStart)
 					{
-						System.out.println("first");saveFileInfo(info);}
+						saveFileInfo(info);}
 					boolean ok = checkFileInfo(info);
 					if(ok==false){
 						remainsValid = false;
@@ -116,8 +113,9 @@ public class Worker implements Runnable {
 					e.printStackTrace();
 				}
 			}
-			if(remainsValid)
-				saveMaps();
+
+			//if(remainsValid)
+				savePath();
 
 			if(printS)
 			{	printStats(actualFilesInfo);
@@ -152,7 +150,7 @@ public class Worker implements Runnable {
 
 
 		FileInfo fipai = pathInfo.getValidFilesInfo().get(fpai.getAbsolutePath());
-		System.out.println("eu="+info.getFilename()+"  fpai="+fpai.getAbsolutePath());
+
 		if(fipai==null)
 			return true;
 
@@ -161,12 +159,11 @@ public class Worker implements Runnable {
 				cr=fipai.CanRead(),
 				ce=fipai.CanExecute();
 
-		System.out.println("PAI " + cr + "_"+cw + "_"+ce + "_" + "infoBD="+infoBd);
+
 
 		if(infoBd==null){
 
 			info.setState(FileInfo.State.NEW);
-			System.out.println("NEW " + cr + "_"+cw + "_"+ce + "_" );
 			if(fipai.CanWrite() == false)// Parent Folder canWrite=false and a new File Appeared
 				return false;
 
@@ -274,11 +271,11 @@ public class Worker implements Runnable {
 			}
 	}
 
-	public void saveMaps(){
+	public void savePath(){
 		// Replace existing Data for this path
 		//Main.validPathsInfo.put(pathInfo.getPath(), pathInfo);
 		Main.validPathsInfo.put(pathInfo.getPath(),pathInfo);
-		System.out.println("SAVING "+pathInfo.getPath()+":"+pathInfo.getValidFilesInfo().size());
+		//System.out.println("SAVING "+pathInfo.getPath()+":"+pathInfo.getValidFilesInfo().size());
 	}
 
 	public void saveFileInfo(FileInfo fi){
@@ -299,7 +296,8 @@ public class Worker implements Runnable {
 			if(info.isValid())
 				System.out.print(ANSI_GREEN + " [   VALID   ] " + ANSI_RESET + info.CanRead() + "_" + info.CanWrite() + "_" + info.CanExecute());
 			else
-				System.out.print(ANSI_RED + " [ NOT VALID ] " + ANSI_RESET + info.CanRead() + "_" + info.CanWrite() + "_" + info.CanExecute());
+				{System.out.print(ANSI_RED + " [ NOT VALID ] " + ANSI_RESET + info.CanRead() + "_" + info.CanWrite() + "_" + info.CanExecute());
+				 Main.alert("NOT VALID - " +info.getFilename());}
 
 			System.out.println(info.getFilename());
 			/*
@@ -339,4 +337,6 @@ public class Worker implements Runnable {
 				System.out.println("\b");
 			}
 	}
+
+
 }
