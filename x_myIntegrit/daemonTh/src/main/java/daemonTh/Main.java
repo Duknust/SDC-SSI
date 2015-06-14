@@ -14,7 +14,6 @@ public class Main {
 
 	static boolean remainsValid;
 	static HashMap<String,PathInfo> validPathsInfo = null;
-	static HashMap<String,PathInfo> lastvalidPathsInfo = null; // last still valid path info
 	static protected boolean shutdownRequested = false;
 	static Worker wk =null;
 	static HashMap<String,Thread> pathThread = null;
@@ -212,11 +211,11 @@ public class Main {
 	public static boolean loadConf(){
 
 		pidfile = "~/pidfile.txt";
-		savefile = "~/myIsave.data";
-		validfile = "~/myIvalid.data";
+		savefile = "~/bcIsave.data";
+		validfile = "~/bcIvalid.data";
 		conffile=System.getProperty("conf");
 		if(conffile==null)
-			conffile = "~/myintegrit.conf";
+			conffile = "~/bcintegrit.conf";
 
 		File c = new File(conffile);
 			if(c.exists()==false)
@@ -330,7 +329,7 @@ public class Main {
 
 	public static void alert(String message){
 		try {
-			Process p = Runtime.getRuntime().exec(new String[]{"/bin/bash", "-c", "logger -t \"myIntegrit\" -i -p \"CRIT\" " + message});
+			Process p = Runtime.getRuntime().exec(new String[]{"/bin/bash", "-c", "logger -t \"BC Integrit\" -i -p \"CRIT\" " + message});
 			if(inter)
 				System.out.println(message);
 		} catch (IOException e) {

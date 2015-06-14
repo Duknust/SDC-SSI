@@ -212,31 +212,9 @@ public class Worker implements Runnable {
 		}
 		else
 			state = FileInfo.State.DELETED;
-		FileInfo fi = new FileInfo(filename,array,f.canRead(),f.canWrite(),f.canExecute(),f.lastModified(),state,false,isDir);
+		FileInfo fi = new FileInfo(filename,array,f.canRead(),f.canWrite(),f.canExecute(),f.lastModified(),state,isDir);
 		return fi;
 	}
-
-	public boolean mapsAreEqual(HashMap<String, byte []> mapA, HashMap<String, byte []> mapB) {
-
-		try{
-			for (String k : mapB.keySet())
-			{
-				if (Arrays.equals(mapA.get(k),mapB.get(k))==false) {
-					return false;
-				}
-			}
-			for (String y : mapA.keySet())
-			{
-				if (!mapB.containsKey(y)) {
-					return false;
-				}
-			}
-		} catch (NullPointerException np) {
-			return false;
-		}
-		return true;
-	}
-
 
 	public static byte[] createChecksum(String filename) throws Exception {
 		InputStream fis =  new FileInputStream(filename);
@@ -329,14 +307,5 @@ public class Worker implements Runnable {
 
 		System.out.println("\n\nElapsed Time : "+hours+"h "+mins+"m "+secs+"s");
 	}
-
-
-	public final void clearConsole() {
-
-			for (int clear = 0; clear < 50; clear++) {
-				System.out.println("\b");
-			}
-	}
-
 
 }
