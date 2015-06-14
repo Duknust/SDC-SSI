@@ -1,15 +1,16 @@
 package daemonTh;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
  * Created by MrFabio on 12/06/2015.
  */
-public class PathInfo {
+public class PathInfo implements Serializable{
 
-    String path;
-    HashMap<String,FileInfo> validFilesInfo;
-    int checkSeconds;
+    private String path;
+    private HashMap<String,FileInfo> validFilesInfo;
+    private int checkSeconds;
 
     public PathInfo(String path, HashMap<String, FileInfo> validFilesInfo, int checkSeconds) {
         this.path = path;
@@ -39,5 +40,18 @@ public class PathInfo {
 
     public void setCheckSeconds(int checkSeconds) {
         this.checkSeconds = checkSeconds;
+    }
+
+    @Override
+    public String toString() {
+        return "PathInfo{" +
+                "path='" + path + '\'' +
+                ", validFilesInfo=" + validFilesInfo +
+                ", checkSeconds=" + checkSeconds +
+                '}';
+    }
+
+    public void putValidFileInfo(String filename, FileInfo fi) {
+        this.validFilesInfo.put(filename,fi);
     }
 }
