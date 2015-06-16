@@ -1,5 +1,6 @@
 package org.bsl.security.certValidator;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -24,7 +25,7 @@ public class CertValidator {
 
     public static void main(String[] args) {
         CertValidator cv = new CertValidator();
-		// X509Certificate caCert = cv.getCertFromFile("resources/cacert.pem");
+        // X509Certificate caCert = cv.getCertFromFile("resources/cacert.pem");
         // X509Certificate clientCert = cv
         // .getCertFromFile("resources/client_cert.pem");
         if (args.length < 2) {
@@ -62,6 +63,19 @@ public class CertValidator {
                     .generateCertificate(new FileInputStream(filename));
 
         } catch (IOException | CertificateException e) {
+            e.printStackTrace();
+        }
+        return cert;
+    }
+
+    public X509Certificate getCertFromString(byte[] pem) {
+        X509Certificate cert = null;
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X509");
+            cert = (X509Certificate) cf
+                    .generateCertificate(new ByteArrayInputStream(pem));
+
+        } catch (CertificateException e) {
             e.printStackTrace();
         }
         return cert;

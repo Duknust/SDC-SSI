@@ -20,6 +20,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -29,6 +31,8 @@ import javax.crypto.SecretKey;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import org.bsl.classes.Project;
+import org.bsl.classes.User;
+import org.bsl.security.certValidator.CertValidator;
 import org.bsl.security.diffieHellman.exceptions.MessageNotAuthenticatedException;
 import org.bsl.services.ClientHandler;
 import org.bsl.types.HashMapObs;
@@ -63,12 +67,38 @@ public class Main {
     public static ThreadClientListener tcl;
     public static InterfaceSD inter;
     public static Start start;
+    static User user = null;
+    private static final Boolean usernameEntered = false;
+    private static final Boolean connected = false;
+    private static final Boolean ready = false;
+    private static boolean isConnected = false;
 
     private static PublicKey serverPublicKey;
 
     public static void notify_interface() {
 
-        inter.notify();
+        synchronized (inter) {
+            inter.notify();
+        }
+    }
+
+    public static void setUsernameEntered() {
+        synchronized (usernameEntered) {
+            usernameEntered.notify();
+        }
+    }
+
+    public static void setConnected() {
+        synchronized (connected) {
+            isConnected = true;
+            connected.notify();
+        }
+    }
+
+    public static void setReady() {
+        synchronized (ready) {
+            ready.notify();
+        }
     }
 
     public static synchronized void submitProject(String name, int goal, String description) throws IOException {
@@ -139,7 +169,7 @@ public class Main {
 
     public static void startThreadClient() {
         //Iniciar a thread de leitura do socket
-        tcl = new ThreadClientListener(sessionKey, iv, fromServer, toServer);
+        tcl = new ThreadClientListener(sessionKey, iv, fromServer, toServer, connected);
         tcl.start();
     }
 
@@ -216,6 +246,12 @@ public class Main {
     private static DiffieHellman dh;
     private static SecretKey sessionKey;
 
+    public static void setUsername(User loginUser) {
+        user = loginUser;
+
+        Main.setUsernameEntered();
+    }
+
     public void addProject(Project p) {
         mapProjects.vals.put(p.getName(), p);
     }
@@ -227,24 +263,44 @@ public class Main {
         reqProjectInt = -1;
         actMapInt = -1;
         reqRegister = -1;
-        s = connectServer("localhost", 1337);
-        active = 1;
-        if (active == 1) {
-            startThreadClient();
-        }
 
         //inicializar os dados
         format = "dd/MM/yyyy HH:mm:ss";
 
         mapProjects = new HashMapObs();
-
+        active = 1;
         start = new Start();
         start.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         start.setVisible(true);
+
+        synchronized (usernameEntered) {
+            try {
+                usernameEntered.wait();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        s = connectServer("localhost", 1337);
+        setConnected();
+        if (active == 1) {
+            startThreadClient();
+        }
+
     }
 
     public static void sendPackage(Message p) {//So envia pedidos sem dados
 
+        /*if (!isConnected) {
+         synchronized (connected) {
+         try {
+         connected.wait();
+         } catch (InterruptedException ex) {
+         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+         }
+
+         }
+         }*/
         if (p != null) {
             sendMsg(p);
             System.out.println("envia " + p.getType());
@@ -266,7 +322,15 @@ public class Main {
 
             Path currentRelativePath = Paths.get("");
             String s = currentRelativePath.toAbsolutePath().toString();
-            KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterClient/client.pem", s + "/certs/bananaStarterClient/clientkey.der");
+            KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterClient/" + user.getName() + ".pem", s + "/certs/bananaStarterClient/" + user.getName() + "key.der"
+            );
+
+            X509Certificate certificate = (X509Certificate) SignatureKeypairGenerator.getCert(s + "/certs/bananaStarterClient/" + user.getName() + ".pem");
+            CertValidator cv = new CertValidator();
+            toServer.write(Base64.getEncoder().encodeToString(certificate.getEncoded()) + "\n");
+            toServer.flush();
+            String certInString = fromServer.readLine();
+            X509Certificate serverCertificate = cv.getCertFromString(Base64.getDecoder().decode(certInString));
 
             //to Server (client writes first)
             Signature sig = Signature.getInstance("SHA1withRSA");
@@ -288,7 +352,7 @@ public class Main {
             byte[] dhBytes = Base64.getDecoder().decode(dhPubKey);
             byte[] dhSignedBytes = Base64.getDecoder().decode(dhPubKeySignature);
 
-            sig.initVerify(SignatureKeypairGenerator.getCert(s + "/certs/bananaStarterServer/server.pem"));
+            sig.initVerify(serverCertificate);
             sig.update(dhBytes);
             boolean validDHSig = sig.verify(dhSignedBytes);
             if (!validDHSig) {
@@ -349,6 +413,8 @@ public class Main {
 
         } catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException | InvalidKeyException | SignatureException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (CertificateEncodingException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         return socket;
     }

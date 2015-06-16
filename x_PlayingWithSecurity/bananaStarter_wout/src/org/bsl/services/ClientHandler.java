@@ -26,6 +26,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -37,6 +39,7 @@ import org.bsl.classes.OosUser;
 import org.bsl.classes.Project;
 import org.bsl.classes.User;
 import org.bsl.client.Main;
+import org.bsl.security.certValidator.CertValidator;
 import org.bsl.security.diffieHellman.SignatureKeypairGenerator;
 import org.bsl.types.Message;
 import org.bsl.types.TypeOP;
@@ -47,6 +50,7 @@ import org.bsl.types.responses.RepLogin;
 import org.bsl.types.responses.RepMapProj;
 import org.bsl.types.responses.RepProj;
 import org.bsl.types.responses.RepRegister;
+import sun.security.x509.X500Name;
 
 public class ClientHandler extends Thread {
 
@@ -59,6 +63,7 @@ public class ClientHandler extends Thread {
     private SecretKey sessionKey;
     private byte[] iv;
     private DiffieHellman dh;
+    private X509Certificate clientCertificate = null;
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -86,23 +91,6 @@ public class ClientHandler extends Thread {
         TypeOP type;
         String myName = "";
 
-        try {
-            ins = this.socket.getInputStream();
-            outs = this.socket.getOutputStream();
-        } catch (IOException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        /*ObjectInputStream ois = null;
-         ObjectOutputStream ous = null;
-
-         try {
-         ois = new ObjectInputStream(ins);
-         ous = new ObjectOutputStream(outs);
-         } catch (IOException ex) {
-         Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
-         }*/
-        //os = new OosUser("", ous);
         os = new OosUser("", this.socket, this.sessionKey);
         Server.addoos(os);
         while (true) {
@@ -127,6 +115,13 @@ public class ClientHandler extends Thread {
 
                             //checka se o user recebido é igual ao do map
                             User contem = Server.getUser(received.getUser().getName());
+                            X500Name dn = (X500Name) this.clientCertificate.getSubjectDN();
+                            if (!dn.getCommonName().equals(received.getUser().getName())) {
+                                this.fromClient.close();
+                                this.toClient.close();
+                                this.socket.close();
+                                return;
+                            }
                             if (contem != null) {//existe
                                 if (contem.equals(received.getUser()) == true) {//checka user e pass
                                     //resposta.criaREPLOGIN(1);
@@ -256,6 +251,8 @@ public class ClientHandler extends Thread {
                 Server.remove(os);
                 break;
 
+            } catch (IOException ex) {
+                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
@@ -273,6 +270,14 @@ public class ClientHandler extends Thread {
             String s = currentRelativePath.toAbsolutePath().toString();
             KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterServer/server.pem", s + "/certs/bananaStarterServer/serverkey.der");
 
+            X509Certificate certificate = (X509Certificate) SignatureKeypairGenerator.getCert(s + "/certs/bananaStarterServer/server.pem");
+            CertValidator cv = new CertValidator();
+            String certInString = fromClient.readLine();
+            this.clientCertificate = cv.getCertFromString(Base64.getDecoder().decode(certInString));
+
+            toClient.write(Base64.getEncoder().encodeToString(certificate.getEncoded()) + "\n");
+            toClient.flush();
+
             //from Client (now server writes)
             String dhb64 = fromClient.readLine().trim();
             String dhsigb64 = fromClient.readLine().trim();
@@ -280,7 +285,7 @@ public class ClientHandler extends Thread {
             byte[] dhSignedBytes = Base64.getDecoder().decode(dhsigb64);
 
             Signature sig = Signature.getInstance("SHA1withRSA");
-            sig.initVerify(SignatureKeypairGenerator.getCert(s + "/certs/bananaStarterClient/client.pem"));
+            sig.initVerify(clientCertificate);
             sig.update(dhBytes);
             boolean validDHSig = sig.verify(dhSignedBytes);
 
@@ -351,6 +356,8 @@ public class ClientHandler extends Thread {
                 System.exit(0);
             }
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException ex) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (CertificateEncodingException ex) {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

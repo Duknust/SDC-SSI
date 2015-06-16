@@ -19,6 +19,7 @@ import org.bsl.security.diffieHellman.exceptions.MessageNotAuthenticatedExceptio
 import org.bsl.services.ClientHandler;
 import org.bsl.types.Message;
 import org.bsl.types.TypeOP;
+import org.bsl.types.requests.ReqLogin;
 
 public class ThreadClientListener extends Thread {
 
@@ -28,8 +29,10 @@ public class ThreadClientListener extends Thread {
     private BufferedWriter toServer;
     private DiffieHellman dh;
     private XStream serializer;
+    private boolean connected = false;
+    private final Boolean userLogin;
 
-    public ThreadClientListener(SecretKey sessionKey, byte[] iv, BufferedReader fromServer, BufferedWriter toServer) {
+    public ThreadClientListener(SecretKey sessionKey, byte[] iv, BufferedReader fromServer, BufferedWriter toServer, Boolean readyToLogin) {
         this.sessionKey = sessionKey;
         this.iv = iv;
         this.fromServer = fromServer;
@@ -37,7 +40,7 @@ public class ThreadClientListener extends Thread {
         this.dh = new DiffieHellman();
         this.serializer = new XStream(new StaxDriver());
         this.serializer.processAnnotations(Message.class);
-
+        this.userLogin = readyToLogin;
     }
 
     @Override
@@ -45,6 +48,8 @@ public class ThreadClientListener extends Thread {
 
         Message p;
         TypeOP tp;
+        Message login = new ReqLogin(Main.user);
+        Main.sendPackage(login);
         while (true) {
             p = null;
             tp = TypeOP.NULL;
@@ -94,7 +99,7 @@ public class ThreadClientListener extends Thread {
                         System.out.println("Received " + tp);
                         Main.mapProjects.setProj(p.getProj());
 
-                        Main.notify_interface();
+//                        Main.notify_interface();
                         break;
 
                     case REP_ADD_EUROS:
@@ -127,8 +132,6 @@ public class ThreadClientListener extends Thread {
 
             }
         }
-
-        //   out.close();
     }
 
     public Message receiveMsg() {
@@ -144,7 +147,8 @@ public class ThreadClientListener extends Thread {
             msg = (Message) this.serializer.fromXML(toBeParsed);
 
         } catch (IOException | MessageNotAuthenticatedException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ClientHandler.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return msg;
     }
@@ -156,8 +160,10 @@ public class ThreadClientListener extends Thread {
             byte[] clientMessageBytes = dh.generateMAC(sessionKey, message.getBytes(), iv);
             toServer.write(Base64.getEncoder().encodeToString(clientMessageBytes) + "\n");
             toServer.flush();
+
         } catch (IOException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Main.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }

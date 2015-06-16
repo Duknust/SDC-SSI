@@ -28,9 +28,9 @@ public class UserDAO extends GenericDAO<User> {
     public boolean insert(MongoCollection mc, User object) throws GenericDAOException {
         boolean res = false;
 
-        if (mc.find(new BasicDBObject("username", object.getName())).limit(1) != null) {
+        if (mc.find(new BasicDBObject("_id", object.getName())).limit(1) != null) {
             Map<String, Object> userInMap = new HashMap<>();
-            userInMap.put("username", object.getName());
+            userInMap.put("_id", object.getName());
             userInMap.put("password", object.getPassword());
             Document doc = new Document(userInMap);
             try {

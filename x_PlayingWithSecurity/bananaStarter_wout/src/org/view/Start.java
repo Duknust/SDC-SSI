@@ -15,7 +15,6 @@ import org.bsl.client.Main;
 import org.bsl.classes.User;
 import org.bsl.services.ClientHandler;
 import org.bsl.types.Message;
-import org.bsl.types.requests.ReqLogin;
 import org.bsl.types.requests.ReqRegister;
 
 public class Start extends javax.swing.JFrame {
@@ -297,10 +296,7 @@ public class Start extends javax.swing.JFrame {
 
             //Mensagem login = new Message();
             User userpass = new User(user, password.toString());
-
-            Message login = new ReqLogin(userpass);
-            //login.criaREQLOGIN(userpass);
-            Main.sendPackage(login);
+            Main.setUsername(userpass);
             try {
                 while (Main.reqLoginInt == -1.0) {
                     synchronized (this) {
