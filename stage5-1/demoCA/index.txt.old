@@ -7,3 +7,5 @@ V	160518220232Z		45678907	unknown	/C=PT/ST=Braga/L=Braga/O=BananaCorp/OU=Servers
 V	160522170527Z		45678908	unknown	/C=PT/ST=Braga/L=Braga/O=BananaCorp/OU=Clients/CN=Mr.Client1/emailAddress=client1@microsoft.com
 V	160522172547Z		45678909	unknown	/C=PT/ST=Braga/L=Braga/O=BananaCorp/OU=Servers/CN=BananaCorpServer/emailAddress=server@bananacorp.org
 V	160522173339Z		4567890A	unknown	/C=PT/ST=Braga/L=Braga/O=BananaCorp/OU=Servers/CN=Server/emailAddress=server@bananacorp.org
+V	160525090400Z		4567890B	unknown	/C=PT/ST=Some-State/O=Universidade do Minho/OU=HASLab/CN=Duarte Duarte/emailAddress=duartenuno1992@hotmail.com
+V	160615205959Z		4567890C	unknown	/C=PT/ST=Braga/L=Braga/O=BananaCorp/OU=Clients/CN=user/emailAddress=user@hotmail.com

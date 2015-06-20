@@ -14,6 +14,7 @@ import java.net.Socket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -27,6 +28,11 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -35,10 +41,12 @@ import org.bsl.classes.User;
 import org.bsl.security.certValidator.CertValidator;
 import org.bsl.security.diffieHellman.exceptions.MessageNotAuthenticatedException;
 import org.bsl.services.ClientHandler;
+import org.bsl.services.Server;
 import org.bsl.types.HashMapObs;
 import org.bsl.types.Message;
 import org.bsl.types.requests.ReqMapProj;
 import org.bsl.types.requests.ReqProj;
+import org.bsl.types.requests.ReqRegister;
 import org.bsl.types.requests.ReqReqRetry;
 import org.view.Start;
 import org.view.InterfaceSD;
@@ -72,6 +80,7 @@ public class Main {
     private static final Boolean connected = false;
     private static final Boolean ready = false;
     private static boolean isConnected = false;
+    private static XStream serializer;
 
     private static PublicKey serverPublicKey;
 
@@ -264,6 +273,9 @@ public class Main {
         actMapInt = -1;
         reqRegister = -1;
 
+        serializer = new XStream(new StaxDriver());
+        serializer.processAnnotations(Message.class);
+
         //inicializar os dados
         format = "dd/MM/yyyy HH:mm:ss";
 
@@ -452,5 +464,44 @@ public class Main {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return msg;
+    }
+
+    public static Message register(ReqRegister rr) {
+        Message response = null;
+        try {
+            Socket socket = new Socket("localhost", 1338);
+            BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
+            String serverCertificateString = br.readLine();
+            CertValidator cv = new CertValidator();
+            byte[] serverCertificateBytes = Base64.getDecoder().decode(serverCertificateString);
+            X509Certificate serverCertificate = cv.getCertFromString(serverCertificateBytes);
+
+            KeyGenerator kg = KeyGenerator.getInstance("AES");
+            kg.init(128);
+            Key key = kg.generateKey();
+
+            Cipher toEncrypt = Cipher.getInstance("AES");
+            toEncrypt.init(Cipher.ENCRYPT_MODE, key);
+            byte[] encryptedMessage = toEncrypt.doFinal(serializer.toXML(rr).getBytes());
+
+            PublicKey pk = serverCertificate.getPublicKey();
+            toEncrypt = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            toEncrypt.init(Cipher.ENCRYPT_MODE, pk);
+            byte[] encryptedKey = toEncrypt.doFinal(key.getEncoded());
+
+            bw.write(Base64.getEncoder().encodeToString(encryptedKey) + "\n");
+            bw.write(Base64.getEncoder().encodeToString(encryptedMessage) + "\n");
+            bw.flush();
+
+            String responseInString = br.readLine();
+            response = (Message) serializer.fromXML(responseInString);
+            socket.close();
+
+        } catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return response;
     }
 }

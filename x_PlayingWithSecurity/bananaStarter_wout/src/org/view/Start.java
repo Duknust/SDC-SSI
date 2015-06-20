@@ -8,14 +8,18 @@ package org.view;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.bsl.client.Main;
 import org.bsl.classes.User;
 import org.bsl.services.ClientHandler;
-import org.bsl.types.Message;
 import org.bsl.types.requests.ReqRegister;
+import org.bsl.types.responses.RepRegister;
 
 public class Start extends javax.swing.JFrame {
 
@@ -295,7 +299,17 @@ public class Start extends javax.swing.JFrame {
             }
 
             //Mensagem login = new Message();
-            User userpass = new User(user, password.toString());
+            MessageDigest md = null;
+            try {
+                md = MessageDigest.getInstance("SHA-256");
+                md.update(password.toString().getBytes("UTF-8")); // Change this to "UTF-16" if needed
+            } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+                Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            byte[] digest = md.digest();
+            User userpass = new User(user, Base64.getEncoder().encodeToString(digest));
+
             Main.setUsername(userpass);
             try {
                 while (Main.reqLoginInt == -1.0) {
@@ -350,51 +364,44 @@ public class Start extends javax.swing.JFrame {
     }//GEN-LAST:event_jLabelXSAIRMouseExited
 
     private void jButtonREGISTARActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonREGISTARActionPerformed
+        String nomer = jTextFieldRegistoNome.getText();
+        char[] pass = jPasswordFieldInicio.getPassword();
+        StringBuilder password = new StringBuilder();
+        for (char c : pass) {
+            password.append(c);
+        }
+        if (nomer.length() > 0 && password.length() > 0) {
 
-        if (Main.active == 1) {
-
-            String nomer = jTextFieldRegistoNome.getText();
-            char[] pass = jPasswordFieldInicio.getPassword();
-            StringBuilder password = new StringBuilder();
-            for (char c : pass) {
-                password.append(c);
+            MessageDigest md = null;
+            try {
+                md = MessageDigest.getInstance("SHA-256");
+                md.update(password.toString().getBytes());
+            } catch (NoSuchAlgorithmException ex) {
+                Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            if (nomer.length() > 0 && password.length() > 0) {
+            byte[] digest = md.digest();
+            String passEnc = Base64.getEncoder().encodeToString(digest);
+            ReqRegister pa = new ReqRegister(nomer, passEnc);
 
-                //Mensagem pa = new Message();
-                //pa.criaREQREGISTO(nomer, password.toString());
-                Message pa = new ReqRegister(nomer, password.toString());
-                Main.sendPackage(pa);
+            RepRegister response = (RepRegister) Main.register(pa);
+            boolean registered = response.getValue1() == 0;
 
-                try {
-                    while (Main.reqRegister == -1) {
-                        synchronized (this) {
-                            this.wait();
-                        }
-                    }
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
-                    System.out.println("No wait do Registo " + ex.toString());
-                }
+            if (registered) {
+                Main.reqRegister = -1;
+                Main.userloggedIn = nomer;
+                JOptionPane.showMessageDialog(this, nomer + " Registado com sucesso!", null, JOptionPane.INFORMATION_MESSAGE);
+                Main.start.dispose();
 
-                if (Main.reqRegister == 1) {//registou
-                    Main.reqRegister = -1;
+                jTextField1.setText(nomer);
+                jPasswordField1.setText(password.toString());
+                this.jButtonLoginActionPerformed(evt);
 
-                    Main.userloggedIn = nomer;
-                    JOptionPane.showMessageDialog(this, nomer + " Registado com sucesso!", null, JOptionPane.INFORMATION_MESSAGE);
-                    Main.start.dispose();
-
-                    Main.startInterfaceSD();
-
-                } else {
-                    Main.reqRegister = -1;
-                    JOptionPane.showMessageDialog(this, "O nome de Utilizador " + nomer + " já existe", "Error", JOptionPane.INFORMATION_MESSAGE);
-                }
+            } else {
+                Main.reqRegister = -1;
+                JOptionPane.showMessageDialog(this, "O nome de Utilizador " + nomer + " já existe", "Error", JOptionPane.INFORMATION_MESSAGE);
             }
-        } else {
-            JOptionPane.showMessageDialog(this, "Perdeu-se a ligação ao servidor", "Error", JOptionPane.INFORMATION_MESSAGE);
-            fechatudo();
+
         }
 
     }//GEN-LAST:event_jButtonREGISTARActionPerformed

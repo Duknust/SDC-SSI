@@ -8,6 +8,7 @@ import org.bsl.types.Message;
 import com.mongodb.client.MongoCollection;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,6 @@ public class Server {
     public static void main(String[] args) {
 
         try {
-
             //mp = new HashMap<>();
             //uz = new HashMap<>();
             MongoConnection mc = new MongoConnection("projectWithSecurity");
@@ -104,16 +104,25 @@ public class Server {
 
             listOosUser = new ArrayList<>();
 
-            int port = 1337;
-            System.out.println("Connection to port " + port + ", wait  ...");
+            int port = 1337; //logins and services
+            int portRegisters = 1338; //registers
+            System.out.println("Openning port " + port + ", wait  ...");
+            System.out.println("Openning port " + portRegisters + ", wait  ...");
             ServerSocket ss = null;
+            ServerSocket ssRegisters = null;
 
             try {
                 ss = new ServerSocket(port);
+                ssRegisters = new ServerSocket(portRegisters);
             } catch (IOException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
             System.out.println("Server is online: " + ss);
+            System.out.println("Server is online: " + ssRegisters);
+
+            RegistersHandler rh = new RegistersHandler(ssRegisters);
+            Thread trh = new Thread(rh);
+            trh.start();
 
             Thread t = new Thread() {
 //Isto é que mal começa uma thread nunca mais funca, o save só é feito quando há um disconnect
@@ -155,6 +164,8 @@ public class Server {
             }
 
         } catch (GenericDAOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (CertificateEncodingException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
 
