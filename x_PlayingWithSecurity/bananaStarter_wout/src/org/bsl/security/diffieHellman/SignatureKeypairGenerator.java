@@ -70,6 +70,7 @@ public class SignatureKeypairGenerator {
     }
 
     public static KeyPair fromCertAndKey(String certFilename, String keyFilename) {
+
         KeyPair kp = null;
 
         CertValidator cv = new CertValidator();

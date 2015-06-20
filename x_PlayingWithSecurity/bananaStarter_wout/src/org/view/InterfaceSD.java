@@ -302,7 +302,7 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
                     int actual = p.getPledged(), necessario = p.getGoal();
 
                     if (actual >= necessario) {
-                        jTextFieldMPEstado.setText("FINANCIDADO");
+                        jTextFieldMPEstado.setText("FINANCIADO");
                         jTextFieldMPEstado.setBackground(Color.GREEN);
                     } else {
                         jTextFieldMPEstado.setText("EM FINANCIAMENTO");

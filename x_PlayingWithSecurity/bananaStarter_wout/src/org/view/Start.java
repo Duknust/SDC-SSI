@@ -403,7 +403,6 @@ public class Start extends javax.swing.JFrame {
             }
 
         }
-
     }//GEN-LAST:event_jButtonREGISTARActionPerformed
 
     private void jTextFieldRegistoNomeKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldRegistoNomeKeyPressed
