@@ -7,7 +7,7 @@ package org.view;
 
 import java.io.IOException;
 import javax.swing.JOptionPane;
-import org.Main;
+import org.bsl.client.Main;
 
 public class SubmitProject extends javax.swing.JFrame {
 
