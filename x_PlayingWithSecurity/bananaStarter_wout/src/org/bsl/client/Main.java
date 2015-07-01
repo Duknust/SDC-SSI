@@ -7,6 +7,7 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -41,7 +42,6 @@ import org.bsl.classes.User;
 import org.bsl.security.certValidator.CertValidator;
 import org.bsl.security.diffieHellman.exceptions.MessageNotAuthenticatedException;
 import org.bsl.services.ClientHandler;
-import org.bsl.services.Server;
 import org.bsl.types.HashMapObs;
 import org.bsl.types.Message;
 import org.bsl.types.requests.ReqMapProj;
@@ -294,9 +294,25 @@ public class Main {
         }
 
         s = connectServer("localhost", 1337);
-        setConnected();
-        if (active == 1) {
-            startThreadClient();
+        if (s != null) {
+            setConnected();
+            if (active == 1) {
+                startThreadClient();
+            }
+        } else {
+            //start.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            //start.setVisible(false);
+            //start.dispose();
+///dafuq? is
+            // No Certificate
+            reqLoginInt = 2;
+            synchronized (start) {
+                start.notify();
+            }
+            //JOptionPane.showConfirmDialog(null, "Não tem Certificado", "Error", JOptionPane.ERROR_MESSAGE);
+            //JOptionPane.showMessageDialog(null, "ERROR", "Não tem Certificado!", JOptionPane.ERROR_MESSAGE);
+            //start.setVisible(true);
+
         }
 
     }
@@ -323,6 +339,16 @@ public class Main {
 
     public static Socket connectServer(String host, int port) {
         Socket socket = null;
+
+        Path currentRelativePath = Paths.get("");
+        String s = currentRelativePath.toAbsolutePath().toString();
+
+        File f = new File(s + "/certs/bananaStarterClient/" + user.getName() + ".pem");
+
+        if (!f.exists()) {
+            return null;
+        }
+
         try {
             socket = new Socket(host, port);
 
@@ -332,8 +358,6 @@ public class Main {
             dh = new DiffieHellman();
             KeyPair mineKeys = dh.generateKeyPair(true);
 
-            Path currentRelativePath = Paths.get("");
-            String s = currentRelativePath.toAbsolutePath().toString();
             KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterClient/" + user.getName() + ".pem", s + "/certs/bananaStarterClient/" + user.getName() + "key.der"
             );
 
@@ -428,20 +452,25 @@ public class Main {
         } catch (CertificateEncodingException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
+
         return socket;
     }
 
     public static Message sendMsg(Message msg) {
         try {
             XStream serializer = new XStream(new StaxDriver());
-            serializer.processAnnotations(Message.class);
+            serializer
+                    .processAnnotations(Message.class
+                    );
             String message = serializer.toXML(msg);
 
             byte[] clientMessageBytes = dh.generateMAC(sessionKey, message.getBytes(), iv);
+
             toServer.write(Base64.getEncoder().encodeToString(clientMessageBytes) + "\n");
             toServer.flush();
         } catch (IOException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Main.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -461,7 +490,8 @@ public class Main {
             msg = (Message) serializer.fromXML(toBeParsed);
 
         } catch (IOException | MessageNotAuthenticatedException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ClientHandler.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return msg;
     }
@@ -499,8 +529,8 @@ public class Main {
             response = (Message) serializer.fromXML(responseInString);
             socket.close();
 
-        } catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchAlgorithmException | IOException | InvalidKeyException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         return response;
     }

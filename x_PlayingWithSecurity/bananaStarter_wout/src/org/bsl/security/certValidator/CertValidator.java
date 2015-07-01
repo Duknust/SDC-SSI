@@ -59,8 +59,11 @@ public class CertValidator {
              * byte[] encodedKey = everything.getBytes();
              */
             CertificateFactory cf = CertificateFactory.getInstance("X509");
-            cert = (X509Certificate) cf
-                    .generateCertificate(new FileInputStream(filename));
+            FileInputStream fis = new FileInputStream(filename);
+            if (fis != null) {
+                cert = (X509Certificate) cf
+                        .generateCertificate(fis);
+            }
 
         } catch (IOException | CertificateException e) {
             e.printStackTrace();

@@ -46,10 +46,10 @@ import org.bsl.types.TypeOP;
 import org.bsl.types.requests.ReqActProj;
 import org.bsl.types.requests.ReqNotifEuros;
 import org.bsl.types.responses.RepAddEuros;
+import org.bsl.types.responses.RepWrongLogin;
 import org.bsl.types.responses.RepLogin;
 import org.bsl.types.responses.RepMapProj;
 import org.bsl.types.responses.RepProj;
-import org.bsl.types.responses.RepRegister;
 import sun.security.x509.X500Name;
 
 public class ClientHandler extends Thread {
@@ -112,11 +112,12 @@ public class ClientHandler extends Thread {
                         case NULL:
                             break;
                         case REQ_LOGIN:
-
                             //checka se o user recebido é igual ao do map
                             User contem = Server.getUser(received.getUser().getName());
                             X500Name dn = (X500Name) this.clientCertificate.getSubjectDN();
                             if (!dn.getCommonName().equals(received.getUser().getName())) {
+                                response = new RepWrongLogin("Wrong DN in certificate");
+                                sendMsg(response);
                                 this.fromClient.close();
                                 this.toClient.close();
                                 this.socket.close();
@@ -210,23 +211,6 @@ public class ClientHandler extends Thread {
                                 //ous.writeObject(response);
                             }
 
-                            break;
-
-                        case REQ_REGISTER:
-
-                            String nameRe = received.getString1();
-                            String passRe = received.getString2();
-                            User user = new User(nameRe, passRe);
-                            boolean registered = Server.addUser(user);
-                            if (registered == false)//nao existe
-                            {
-                                response = new RepRegister(nameRe, 1);
-                            } else {
-                                response = new RepRegister(nameRe, 0);
-                            }
-
-                            sendMsg(response);
-                            //ous.writeObject(response);
                             break;
 
                         case REQ_RETRY:
