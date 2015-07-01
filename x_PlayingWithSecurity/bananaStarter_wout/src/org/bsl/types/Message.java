@@ -21,13 +21,13 @@ import org.bsl.types.requests.ReqNotifEuros;
 import org.bsl.types.requests.ReqProj;
 import org.bsl.types.requests.ReqRegister;
 import org.bsl.types.requests.ReqReqRetry;
-import org.bsl.types.responses.RepAddEuros;
+import org.bsl.types.responses.RepWrongLogin;
 import org.bsl.types.responses.RepLogin;
 import org.bsl.types.responses.RepMapProj;
 import org.bsl.types.responses.RepProj;
 import org.bsl.types.responses.RepRegister;
 
-@XStreamInclude({ReqActProj.class, ReqAddEuros.class, ReqAddProj.class, ReqLogin.class, ReqMapProj.class, ReqNotifEuros.class, ReqProj.class, ReqRegister.class, ReqReqRetry.class, RepAddEuros.class, RepLogin.class, RepMapProj.class, RepProj.class, RepRegister.class})
+@XStreamInclude({ReqActProj.class, ReqAddEuros.class, ReqAddProj.class, ReqLogin.class, ReqMapProj.class, ReqNotifEuros.class, ReqProj.class, ReqRegister.class, ReqReqRetry.class, RepWrongLogin.class, RepLogin.class, RepMapProj.class, RepProj.class, RepRegister.class, RepWrongLogin.class})
 public abstract class Message implements Serializable {
 
     @XStreamAlias("type")

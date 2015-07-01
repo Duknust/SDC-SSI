@@ -128,6 +128,11 @@ public class ThreadClientListener extends Thread {
                         }
                         break;
 
+                    case REP_WRONG_LOGIN:
+                        System.out.println("Received " + tp);
+                        JOptionPane.showMessageDialog(null, p.getString1());
+                        break;
+
                 }
 
             }

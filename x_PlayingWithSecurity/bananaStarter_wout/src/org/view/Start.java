@@ -330,9 +330,13 @@ public class Start extends javax.swing.JFrame {
             } else if (Main.reqLoginInt == 0) {
 
                 JOptionPane.showMessageDialog(this, "Password inválida", "Error", JOptionPane.INFORMATION_MESSAGE);
-            } else {
+            } else if (Main.reqLoginInt == 1) {
                 JOptionPane.showMessageDialog(this, "Utilizador não existe", "Error", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Certificado não existe\nAplicação vai fechar", "Erro", JOptionPane.INFORMATION_MESSAGE);
+                this.dispose();
             }
+
             Main.reqLoginInt = -1;
             jTextField1.setText(null);
             jPasswordField1.setText(null);

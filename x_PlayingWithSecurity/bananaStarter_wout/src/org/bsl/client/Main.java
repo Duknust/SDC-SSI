@@ -304,7 +304,12 @@ public class Main {
             //start.setVisible(false);
             //start.dispose();
 ///dafuq? is
-            JOptionPane.showConfirmDialog(null, "Não tem Certificado", "Error", JOptionPane.ERROR_MESSAGE);
+            // No Certificate
+            reqLoginInt = 2;
+            synchronized (start) {
+                start.notify();
+            }
+            //JOptionPane.showConfirmDialog(null, "Não tem Certificado", "Error", JOptionPane.ERROR_MESSAGE);
             //JOptionPane.showMessageDialog(null, "ERROR", "Não tem Certificado!", JOptionPane.ERROR_MESSAGE);
             //start.setVisible(true);
 
