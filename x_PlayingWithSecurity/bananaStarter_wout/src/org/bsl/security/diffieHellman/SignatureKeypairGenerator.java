@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -75,10 +76,13 @@ public class SignatureKeypairGenerator {
 
         CertValidator cv = new CertValidator();
         X509Certificate clientCert = cv.getCertFromFile(certFilename);
-        PrivateKey clientPrivKey = (PrivateKey) cv.getKeyFromFile(keyFilename);
-        PublicKey clientPubKey = clientCert.getPublicKey();
-        kp = new KeyPair(clientPubKey, clientPrivKey);
+        Key key = cv.getKeyFromFile(keyFilename);
+        if (key != null) {
+            PrivateKey clientPrivKey = (PrivateKey) key;
 
+            PublicKey clientPubKey = clientCert.getPublicKey();
+            kp = new KeyPair(clientPubKey, clientPrivKey);
+        }
         return kp;
     }
 
