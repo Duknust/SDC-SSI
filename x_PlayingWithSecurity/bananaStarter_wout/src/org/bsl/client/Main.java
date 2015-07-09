@@ -360,6 +360,9 @@ public class Main {
 
             KeyPair signatureKeys = SignatureKeypairGenerator.fromCertAndKey(s + "/certs/bananaStarterClient/" + user.getName() + ".pem", s + "/certs/bananaStarterClient/" + user.getName() + "key.der"
             );
+            if (signatureKeys == null) {
+                return null;
+            }
 
             X509Certificate certificate = (X509Certificate) SignatureKeypairGenerator.getCert(s + "/certs/bananaStarterClient/" + user.getName() + ".pem");
             CertValidator cv = new CertValidator();

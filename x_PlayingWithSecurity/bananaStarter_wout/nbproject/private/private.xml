@@ -12,9 +12,12 @@
             <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/view/InterfaceSD.java</file>
             <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/client/ThreadClientListener.java</file>
             <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/security/diffieHellman/Client.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/dao/UserDAO.java</file>
             <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/security/diffieHellman/DiffieHellman.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/dao/ProjectDAO.java</file>
             <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/services/ClientHandler.java</file>
             <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/types/responses/RepWrongLogin.java</file>
+            <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/dao/GenericDAO.java</file>
             <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/services/RegistersHandler.java</file>
             <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/classes/User.java</file>
             <file>file:/Users/duarteduarte/Programming/MEI/SDC-SSI/x_PlayingWithSecurity/bananaStarter_wout/src/org/bsl/types/TypeOP.java</file>

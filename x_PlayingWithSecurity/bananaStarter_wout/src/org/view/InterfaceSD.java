@@ -79,7 +79,11 @@ public class InterfaceSD extends javax.swing.JFrame implements Observer/*, Runna
 //        jTextFieldProjUser.setText(Integer.toString(con));
         //
         while (dtm.getRowCount() > 0) {
-            dtm.removeRow(0);
+            try {
+                dtm.removeRow(0);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                ;
+            }
         }
 
         HashMap<String, Project> lm = Main.mapProjects.vals;

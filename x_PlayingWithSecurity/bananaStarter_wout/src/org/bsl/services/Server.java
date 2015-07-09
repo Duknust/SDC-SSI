@@ -44,8 +44,11 @@ public class Server {
     public static void sendToEverybody(Message p) {
 
         for (ClientHandler ch : clientHandlers) {
-            ch.sendMsg(p);
-
+            if (!ch.getSocket().isClosed()) {
+                ch.sendMsg(p);
+            } else {
+                clientHandlers.remove(ch);
+            }
         }
 
     }

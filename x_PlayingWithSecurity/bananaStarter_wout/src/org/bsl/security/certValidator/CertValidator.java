@@ -96,8 +96,12 @@ public class CertValidator {
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encodedKey);
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             privKey = (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+        } catch (InvalidKeySpecException ee) {
+            return null;
+        } catch (IOException eee) {
+            eee.printStackTrace();
         }
         return privKey;
     }
